@@ -1,66 +1,89 @@
 # PaperBridge
 
-PaperBridge 是一个面向 Windows 的本地英文科研论文阅读与中文翻译工具，优先服务核反应堆物理论文阅读。
+[![Release](https://img.shields.io/github/v/release/sunxiao03/PaperBridge?display_name=tag)](https://github.com/sunxiao03/PaperBridge/releases/latest)
+[![License](https://img.shields.io/github/license/sunxiao03/PaperBridge)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4)](#系统要求)
 
-项目首先满足个人使用，再以容易安装、容易审查、没有内置密钥的方式发布到 GitHub，供感兴趣的朋友试用。
+PaperBridge 是一款面向 Windows 的本地优先 PDF 阅读器，适合阅读英文科研论文并进行中文翻译与 AI 辅助理解。
 
-## 当前状态
+它支持直接在 PDF 原文上划选任意内容进行翻译，同时提供本地文献库、术语表、批注、书签、双语视图和独立 AI 助读窗口。项目起源于核反应堆物理论文的个人阅读需求，目前以开源预览版形式供朋友和感兴趣的用户试用。
 
-阶段 0–6 已完成。除本地文献库、高清连续 PDF 阅读、原页划词翻译和专业术语系统外，当前版本还提供可收起侧栏、段落双语派生视图、左右对照、页面/段落映射、版面置信度与明确降级、有界预翻译及可取消全文翻译。原文高亮、下划线、批注和页面书签保存为本地可验证锚点。AI 助读以独立非模态窗口提供选区解释、章节/全文总结和当前论文有据问答，可与译文区同时查看；页码、英文片段和章节由本地 BM25 检索与引用校验确定，不接受模型伪造的证据。机器译文和用户编辑稿分层保存；API Key 只保存到 Windows Credential Manager。
+## 主要功能
 
-完整范围和验收规则见：
+- 高清连续 PDF 阅读、平滑滚动、多标签页、目录和缩略图导航
+- 直接在 PDF 原文上划词、划句或选择任意段落进行翻译
+- 可收起的文献栏与目录栏，为阅读和译文保留更多空间
+- OpenAI、DeepSeek 及 OpenAI 兼容服务支持
+- 术语表约束、段落双语视图、左右对照和全文翻译
+- 高亮、下划线、批注和页面书签
+- 独立 AI 助读窗口，支持选区解释、章节/全文总结和当前文献问答
+- 本地 SQLite 文献库、自动数据库快照及完整数据备份/恢复脚本
+- API Key 仅保存到 Windows Credential Manager
 
-- [产品规格](docs/PRODUCT_SPEC.md)
-- [执行计划](docs/EXECUTION_PLAN.md)
-- [技术基线决策](docs/adr/0001-technology-baseline.md)
-- [PDFium 集成决策](docs/adr/0002-pdfium-integration.md)
-- [本地文献库决策](docs/adr/0003-local-library-and-storage.md)
-- [PDF 元数据与导航决策](docs/adr/0004-pdf-metadata-outline-and-thumbnails.md)
-- [多标签与 PDFium 并发决策](docs/adr/0005-multi-tab-and-pdfium-concurrency.md)
-- [文献分类与移除决策](docs/adr/0006-library-classification-and-removal.md)
-- [阶段 0 性能基线](docs/PERFORMANCE_BASELINE.md)
-- [基准 PDF 语料清单](docs/BENCHMARK_CORPUS.md)
-- [翻译服务设置与人工冒烟测试](docs/TRANSLATION_SETUP.md)
-- [基础翻译管线决策](docs/adr/0007-translation-pipeline-and-secrets.md)
-- [术语系统使用说明](docs/GLOSSARY_SYSTEM.md)
-- [术语数据与约束决策](docs/adr/0008-glossary-system.md)
-- [双语阅读与全文翻译](docs/BILINGUAL_TRANSLATION.md)
-- [版面降级与翻译调度决策](docs/adr/0009-bilingual-layout-and-scheduling.md)
-- [高亮、批注与书签](docs/ANNOTATIONS_AND_BOOKMARKS.md)
-- [批注锚点与安全迁移决策](docs/adr/0010-annotation-anchors-and-migration.md)
-- [AI 阅读辅助](docs/AI_READING_ASSISTANT.md)
-- [当前文档检索与可验证引用决策](docs/adr/0011-current-document-retrieval-and-citations.md)
+## 下载与安装
 
-## 技术基线
+从 [Releases](https://github.com/sunxiao03/PaperBridge/releases/latest) 下载：
+
+- `PaperBridge-0.1.0-win-x64.zip`
+- `SHA256SUMS.txt`
+
+下载后先验证文件哈希：
+
+```powershell
+Get-FileHash .\PaperBridge-0.1.0-win-x64.zip -Algorithm SHA256
+```
+
+然后解压 ZIP，在解压目录中运行：
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\Install-PaperBridge.ps1
+```
+
+默认安装到 `%LOCALAPPDATA%\Programs\PaperBridge`，并创建开始菜单快捷方式。详细说明见[安装与卸载](docs/INSTALLATION_AND_UNINSTALL.md)。
+
+> [!IMPORTANT]
+> `0.1.0` 是未签名的个人项目预览版，Windows SmartScreen 可能显示警告。请从本仓库 Release 下载，并使用随附的 `SHA256SUMS.txt` 校验安装包。
+
+## 基本使用
+
+1. 启动 PaperBridge 并导入 PDF。
+2. 在 PDF 原文上拖选文字，松开鼠标后自动翻译。
+3. 在“设置”中选择翻译服务、模型和 Base URL，并保存 API Key。
+4. 点击“AI 助读”可打开独立窗口，解释选区、总结章节或就当前文献提问。
+
+翻译和 AI 功能需要用户自行提供服务商 API Key；普通 PDF 阅读、检索、批注和文献管理均在本地完成。
+
+## 隐私与安全
+
+- 项目没有账户系统、遥测、广告、崩溃上报或自动更新检查。
+- PDF、数据库、批注和设置默认保存在 `%LOCALAPPDATA%\PaperBridge`。
+- API Key 保存在 Windows Credential Manager，不写入仓库、设置 JSON 或 SQLite。
+- 只有在用户主动翻译或调用 AI 助读时，所需文本和自定义指令才会发送给所选服务商。
+- 机密或受限制文档在调用第三方服务前，应先确认相应数据处理权限。
+
+请阅读[隐私说明](PRIVACY.md)、[安全政策](SECURITY.md)和[已知限制](docs/KNOWN_LIMITATIONS.md)。
+
+## 从源码构建
+
+### 系统要求
 
 - Windows 10/11 x64
-- C# / .NET 10 LTS / WPF
-- PDFium
-- SQLite + FTS5
-- 自包含 Windows x64 发布
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- PowerShell
 
-## 安全原则
+### 构建与测试
 
-真实 API Key 只存入 Windows Credential Manager。仓库、日志、数据库、测试数据和构建产物不得包含真实密钥。
+```powershell
+git clone https://github.com/sunxiao03/PaperBridge.git
+cd PaperBridge
 
-## 许可证
+dotnet restore .\PaperBridge.slnx
+dotnet build .\PaperBridge.slnx --configuration Release --no-restore
+dotnet test .\PaperBridge.slnx --configuration Release --no-build --no-restore
+```
 
-[MIT](LICENSE)
-
-## 0.1.0 发布候选
-
-阶段 7 冻结版本为 `0.1.0`。发布候选采用 Windows x64 自包含 ZIP，并附带可审查的安装、升级、备份、恢复和卸载 PowerShell 脚本。默认卸载仅移除程序，保留 `%LOCALAPPDATA%\PaperBridge` 与 Windows Credential Manager 凭据；删除数据或凭据必须显式选择。
-
-- [安装与卸载](docs/INSTALLATION_AND_UNINSTALL.md)
-- [备份与恢复](docs/BACKUP_AND_RECOVERY.md)
-- [已知限制](docs/KNOWN_LIMITATIONS.md)
-- [发布说明](docs/RELEASE_NOTES_0.1.0.md)
-- [隐私说明](PRIVACY.md)
-- [安全政策](SECURITY.md)
-- [支持边界](SUPPORT.md)
-- [发布检查表](docs/RELEASE_CHECKLIST.md)
-
-本地构建候选：
+生成自包含 Windows x64 发布包：
 
 ```powershell
 .\packaging\Build-Release.ps1
@@ -68,4 +91,35 @@ PaperBridge 是一个面向 Windows 的本地英文科研论文阅读与中文�
 .\packaging\Test-ReleaseSafety.ps1
 ```
 
-仓库不会猜测或自动创建 GitHub remote；发布必须在人工验收后单独授权。
+## 项目结构
+
+```text
+src/PaperBridge.App             WPF 桌面应用
+src/PaperBridge.Application     阅读、翻译与助读用例
+src/PaperBridge.Domain          领域模型和核心规则
+src/PaperBridge.Infrastructure  PDFium、SQLite、网络和凭据存储
+tests/                          自动化测试
+packaging/                      构建、安装、备份和卸载脚本
+docs/                           产品说明、使用文档和架构决策
+```
+
+## AI 开发声明
+
+本项目的源代码均由 **OpenAI Codex** 根据维护者提出的需求编写和修改。维护者负责需求定义、产品决策、人工测试验收、风险判断和版本发布；Codex 负责架构实现、代码修改、自动化测试、工程文档和发布脚本。
+
+AI 生成不代表代码天然正确或安全。本项目仍按普通开源软件的标准接受审查，使用者应结合源码、测试结果和自身场景进行判断。发现问题时，欢迎提交可复现且不包含敏感资料的 Issue。
+
+## 项目状态与贡献
+
+PaperBridge 是个人维护、尽力支持的项目，目前没有长期路线图或商业支持承诺。Issue 和 Pull Request 均可提交，但回复与合并时间不作保证。
+
+提交问题前请：
+
+- 确认问题不属于[已知限制](docs/KNOWN_LIMITATIONS.md)
+- 尽量使用非机密、可公开的测试 PDF
+- 删除日志中的 API Key、论文敏感内容和个人信息
+- 提供 Windows 版本、PaperBridge 版本及复现步骤
+
+## 许可证
+
+本项目采用 [MIT License](LICENSE)。
