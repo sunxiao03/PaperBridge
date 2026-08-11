@@ -1,0 +1,85 @@
+<Window x:Class="PaperBridge.App.GlossaryManagerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="专业术语管理"
+        Width="1120"
+        Height="690"
+        MinWidth="880"
+        MinHeight="520"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Padding="12" Background="#F3F5F6" BorderBrush="#CDD2D5" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock FontSize="18" FontWeight="SemiBold" Text="术语库" />
+                <ListBox x:Name="GlossaryList" Grid.Row="1" Margin="0,10" SelectionChanged="GlossaryList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="3">
+                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextWrapping="Wrap" />
+                                <TextBlock Margin="0,3,0,0" FontSize="11" Foreground="#62727C" Text="{Binding Topic}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <CheckBox x:Name="EnabledCheckBox" Grid.Row="2" Margin="2,0,0,10" Click="EnabledCheckBox_Click" Content="参与翻译" />
+                <Button Grid.Row="3" Height="30" Click="CreateGlossaryButton_Click" Content="新建个人词库" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <DockPanel>
+                <TextBlock x:Name="SelectedGlossaryTitle" VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Text="词条" />
+                <TextBox x:Name="SearchBox" DockPanel.Dock="Right" Width="260" Padding="7,4" TextChanged="SearchBox_TextChanged" ToolTip="搜索英文、中文、类别或来源" />
+            </DockPanel>
+            <DataGrid x:Name="TermsGrid"
+                      Grid.Row="1"
+                      Margin="0,10"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      SelectionChanged="TermsGrid_SelectionChanged"
+                      CanUserAddRows="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Width="2*" Header="英文" Binding="{Binding English}" />
+                    <DataGridTextColumn Width="2*" Header="首选中文" Binding="{Binding PreferredChinese}" />
+                    <DataGridTextColumn Width="*" Header="类别" Binding="{Binding Category}" />
+                    <DataGridTextColumn Width="*" Header="审核" Binding="{Binding ReviewStatus}" />
+                    <DataGridTextColumn Width="70" Header="优先级" Binding="{Binding Priority}" />
+                    <DataGridTextColumn Width="1.3*" Header="来源" Binding="{Binding SourceReference}" />
+                </DataGrid.Columns>
+            </DataGrid>
+            <WrapPanel Grid.Row="2">
+                <Button Width="74" Margin="0,0,7,7" Click="AddTermButton_Click" Content="新增" />
+                <Button x:Name="EditTermButton" Width="74" Margin="0,0,7,7" Click="EditTermButton_Click" Content="编辑" IsEnabled="False" />
+                <Button x:Name="DeleteTermButton" Width="74" Margin="0,0,7,7" Click="DeleteTermButton_Click" Content="删除" IsEnabled="False" />
+                <Button x:Name="ApproveButton" Width="84" Margin="8,0,7,7" Click="ApproveButton_Click" Content="审核通过" IsEnabled="False" />
+                <Button x:Name="RejectButton" Width="74" Margin="0,0,7,7" Click="RejectButton_Click" Content="驳回" IsEnabled="False" />
+                <Button Width="84" Margin="8,0,7,7" Click="ImportButton_Click" Content="导入…" />
+                <Button Width="84" Margin="0,0,7,7" Click="ExportButton_Click" Content="导出…" />
+            </WrapPanel>
+            <DockPanel Grid.Row="3" Margin="0,5,0,0">
+                <TextBlock x:Name="SummaryText" VerticalAlignment="Center" Foreground="#53636E" />
+                <Button DockPanel.Dock="Right" Width="84" IsCancel="True" Content="关闭" />
+            </DockPanel>
+        </Grid>
+    </Grid>
+</Window>

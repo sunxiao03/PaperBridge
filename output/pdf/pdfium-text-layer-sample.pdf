@@ -1,0 +1,249 @@
+%PDF-1.4
+%“Œ‹ž ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
+endobj
+4 0 obj
+<<
+/BaseFont /Times-Roman /Encoding /WinAnsiEncoding /Name /F3 /Subtype /Type1 /Type /Font
+>>
+endobj
+5 0 obj
+<<
+/BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding /Name /F4 /Subtype /Type1 /Type /Font
+>>
+endobj
+6 0 obj
+<<
+/Contents 15 0 R /MediaBox [ 0 0 612 792 ] /Parent 14 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+7 0 obj
+<<
+/Contents 16 0 R /MediaBox [ 0 0 612 792 ] /Parent 14 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+8 0 obj
+<<
+/Outlines 10 0 R /PageMode /UseNone /Pages 14 0 R /Type /Catalog
+>>
+endobj
+9 0 obj
+<<
+/Author (PaperBridge contributors) /CreationDate (D:20260810230421+08'00') /Creator (PaperBridge fixture generator) /Keywords (PDFium, reactor physics, DOI, outline, text layer) /ModDate (D:20260810230421+08'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (Public-domain integration test fixture) /Title (PDFium Text Layer Fixture) /Trapped /False
+>>
+endobj
+10 0 obj
+<<
+/Count 4 /First 11 0 R /Last 13 0 R /Type /Outlines
+>>
+endobj
+11 0 obj
+<<
+/Count 1 /Dest [ 6 0 R /Fit ] /First 12 0 R /Last 12 0 R /Next 13 0 R /Parent 10 0 R 
+  /Title (Reactor physics text)
+>>
+endobj
+12 0 obj
+<<
+/Dest [ 6 0 R /Fit ] /Parent 11 0 R /Title (Reference parameters)
+>>
+endobj
+13 0 obj
+<<
+/Dest [ 7 0 R /Fit ] /Parent 10 0 R /Prev 11 0 R /Title (Two-column extraction fixture)
+>>
+endobj
+14 0 obj
+<<
+/Count 2 /Kids [ 6 0 R 7 0 R ] /Type /Pages
+>>
+endobj
+15 0 obj
+<<
+/Length 1988
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+.090196 .196078 .278431 rg
+n 0 736 612 56 re f*
+1 1 1 rg
+BT /F2 12 Tf 14.4 TL ET
+BT 1 0 0 1 42 758 Tm (PaperBridge PDFium Fixture) Tj T* ET
+BT /F1 9 Tf 10.8 TL ET
+BT 1 0 0 1 541.479 758 Tm (Page 1) Tj T* ET
+.090196 .196078 .278431 rg
+BT /F2 24 Tf 28.8 TL ET
+BT 1 0 0 1 48 684 Tm (PDFium Text Layer Fixture) Tj T* ET
+BT /F1 11 Tf 13.2 TL ET
+.32549 .388235 .431373 rg
+BT 1 0 0 1 48 660 Tm (A deterministic document for text and coordinate extraction tests.) Tj T* ET
+BT /F1 9 Tf 10.8 TL ET
+BT 1 0 0 1 48 641 Tm (DOI: 10.1234/paperbridge.fixture) Tj T* ET
+.090196 .196078 .278431 rg
+BT /F2 14 Tf 16.8 TL ET
+BT 1 0 0 1 48 598 Tm (1. Reactor physics text) Tj T* ET
+BT /F3 12 Tf 14.4 TL ET
+.12549 .152941 .172549 rg
+BT 1 0 0 1 48 570 Tm (The effective multiplication factor is unity.) Tj T* ET
+BT 1 0 0 1 48 549 Tm (Neutron flux remains stable under the reference condition.) Tj T* ET
+BT 1 0 0 1 48 528 Tm (The benchmark value is k-effective = 1.0000.) Tj T* ET
+.192157 .356863 .470588 rg
+n 48 443 516 29 re f*
+1 1 1 rg
+BT /F2 10 Tf 12 TL ET
+BT 1 0 0 1 60 453 Tm (Parameter) Tj T* ET
+BT 1 0 0 1 268 453 Tm (Value) Tj T* ET
+BT 1 0 0 1 388 453 Tm (Unit) Tj T* ET
+BT /F1 10 Tf 12 TL ET
+.945098 .956863 .960784 rg
+n 48 414 516 29 re f*
+.12549 .152941 .172549 rg
+BT 1 0 0 1 60 424 Tm (Effective multiplication factor) Tj T* ET
+BT 1 0 0 1 268 424 Tm (1.0000) Tj T* ET
+BT 1 0 0 1 388 424 Tm (dimensionless) Tj T* ET
+1 1 1 rg
+n 48 385 516 29 re f*
+.12549 .152941 .172549 rg
+BT 1 0 0 1 60 395 Tm (Neutron flux) Tj T* ET
+BT 1 0 0 1 268 395 Tm (2.50E+14) Tj T* ET
+BT 1 0 0 1 388 395 Tm (n/cm2/s) Tj T* ET
+.945098 .956863 .960784 rg
+n 48 356 516 29 re f*
+.12549 .152941 .172549 rg
+BT 1 0 0 1 60 366 Tm (Delayed neutron fraction) Tj T* ET
+BT 1 0 0 1 268 366 Tm (0.0065) Tj T* ET
+BT 1 0 0 1 388 366 Tm (dimensionless) Tj T* ET
+.435294 .482353 .513725 rg
+BT /F4 9 Tf 10.8 TL ET
+BT 1 0 0 1 48 42 Tm (Generated locally. No external paper content is included.) Tj T* ET
+ 
+endstream
+endobj
+16 0 obj
+<<
+/Length 2072
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+.090196 .196078 .278431 rg
+n 0 736 612 56 re f*
+1 1 1 rg
+BT /F2 12 Tf 14.4 TL ET
+BT 1 0 0 1 42 758 Tm (PaperBridge PDFium Fixture) Tj T* ET
+BT /F1 9 Tf 10.8 TL ET
+BT 1 0 0 1 541.479 758 Tm (Page 2) Tj T* ET
+.090196 .196078 .278431 rg
+BT /F2 18 Tf 21.6 TL ET
+BT 1 0 0 1 48 692 Tm (2. Two-column extraction fixture) Tj T* ET
+.945098 .956863 .960784 rg
+n
+54 350 m
+288 350 l
+291.3168 350 294 352.6832 294 356 c
+294 644 l
+294 647.3168 291.3168 650 288 650 c
+54 650 l
+50.6832 650 48 647.3168 48 644 c
+48 356 l
+48 352.6832 50.6832 350 54 350 c
+h
+f*
+.192157 .356863 .470588 rg
+BT /F2 11 Tf 13.2 TL ET
+BT 1 0 0 1 64 624 Tm (LEFT COLUMN) Tj T* ET
+.945098 .956863 .960784 rg
+n
+324 350 m
+558 350 l
+561.3168 350 564 352.6832 564 356 c
+564 644 l
+564 647.3168 561.3168 650 558 650 c
+324 650 l
+320.6832 650 318 647.3168 318 644 c
+318 356 l
+318 352.6832 320.6832 350 324 350 c
+h
+f*
+.192157 .356863 .470588 rg
+BT /F2 11 Tf 13.2 TL ET
+BT 1 0 0 1 334 624 Tm (RIGHT COLUMN) Tj T* ET
+.12549 .152941 .172549 rg
+BT /F3 11 Tf 13.2 TL ET
+BT 1 0 0 1 64 592 Tm (Prompt neutrons are emitted) Tj T* ET
+BT 1 0 0 1 64 575 Tm (immediately after fission.) Tj T* ET
+BT 1 0 0 1 64 542 Tm (This text is drawn before the) Tj T* ET
+BT 1 0 0 1 64 525 Tm (right-column content.) Tj T* ET
+BT 1 0 0 1 334 592 Tm (Delayed neutron precursors) Tj T* ET
+BT 1 0 0 1 334 575 Tm (govern reactor kinetics.) Tj T* ET
+BT 1 0 0 1 334 542 Tm (Column order must be assessed) Tj T* ET
+BT 1 0 0 1 334 525 Tm (before bilingual alignment.) Tj T* ET
+.090196 .196078 .278431 rg
+BT /F2 12 Tf 14.4 TL ET
+BT 1 0 0 1 48 238 Tm (Expected extraction characteristics) Tj T* ET
+.12549 .152941 .172549 rg
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 58 214 Tm (- Two pages with a normal selectable text layer) Tj T* ET
+BT 1 0 0 1 58 196 Tm (- Stable page size of 612 x 792 PDF points) Tj T* ET
+BT 1 0 0 1 58 178 Tm (- Character boxes available for visible text) Tj T* ET
+.435294 .482353 .513725 rg
+BT /F4 9 Tf 10.8 TL ET
+BT 1 0 0 1 48 42 Tm (This page intentionally contains a simple two-column layout.) Tj T* ET
+ 
+endstream
+endobj
+xref
+0 17
+0000000000 65535 f 
+0000000061 00000 n 
+0000000122 00000 n 
+0000000229 00000 n 
+0000000341 00000 n 
+0000000450 00000 n 
+0000000565 00000 n 
+0000000760 00000 n 
+0000000955 00000 n 
+0000001041 00000 n 
+0000001430 00000 n 
+0000001504 00000 n 
+0000001644 00000 n 
+0000001732 00000 n 
+0000001842 00000 n 
+0000001908 00000 n 
+0000003948 00000 n 
+trailer
+<<
+/ID 
+[<41884136d3e6364f3902881b182173e2><41884136d3e6364f3902881b182173e2>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 9 0 R
+/Root 8 0 R
+/Size 17
+>>
+startxref
+6072
+%%EOF

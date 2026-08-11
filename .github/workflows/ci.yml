@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install .NET 10 SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore PaperBridge.slnx
+
+      - name: Verify formatting
+        run: dotnet format PaperBridge.slnx --no-restore --verify-no-changes
+
+      - name: Build
+        run: dotnet build PaperBridge.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test PaperBridge.slnx --configuration Release --no-build --no-restore
+
+      - name: Build release candidate
+        shell: pwsh
+        run: ./packaging/Build-Release.ps1
+
+      - name: Test install, upgrade, backup, restore, and uninstall
+        shell: pwsh
+        run: ./packaging/Test-Packaging.ps1
+
+      - name: Scan release candidate
+        shell: pwsh
+        run: ./packaging/Test-ReleaseSafety.ps1
+
+      - name: Upload Windows x64 release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaperBridge-0.1.0-win-x64
+          path: artifacts/release/0.1.0/
+          if-no-files-found: error

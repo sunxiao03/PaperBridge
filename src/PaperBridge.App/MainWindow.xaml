@@ -1,0 +1,667 @@
+<Window x:Class="PaperBridge.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:PaperBridge.App"
+        Title="PaperBridge - PDFium 技术预览"
+        Width="1480"
+        Height="760"
+        MinWidth="1120"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen">
+    <Grid Background="#F5F3EE">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Background="#173247">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Foreground="White" FontSize="24" FontWeight="SemiBold" Text="PaperBridge" />
+                <TextBlock Grid.Row="1" Margin="0,6,0,24" Foreground="#BFD0DA" Text="英文文献阅读与翻译" />
+
+                <Grid Grid.Row="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Margin="0,0,0,12">
+                        <Button x:Name="ImportPdfButton" Height="40" Click="ImportPdfButton_Click" Content="导入 PDF" />
+                        <Button Height="32" Margin="0,7,0,0" Click="TranslationSettingsButton_Click" Content="翻译服务设置" />
+                        <Button Height="32" Margin="0,7,0,0" Click="GlossaryManagerButton_Click" Content="专业术语管理" />
+                    </StackPanel>
+                    <TextBlock Grid.Row="1" Margin="4,4,0,7" Foreground="#8FA8B7" Text="文献库" />
+                    <TextBox x:Name="SearchBox"
+                             Grid.Row="2"
+                             Height="32"
+                             Margin="0,0,0,10"
+                             Padding="8,4"
+                             TextChanged="SearchBox_TextChanged"
+                             ToolTip="搜索标题、作者、期刊或 DOI" />
+                    <Grid Grid.Row="3" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="34" />
+                            <ColumnDefinition Width="34" />
+                            <ColumnDefinition Width="34" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="FolderFilterCombo"
+                                  Height="30"
+                                  ItemsSource="{Binding FolderFilters}"
+                                  DisplayMemberPath="DisplayName"
+                                  SelectionChanged="FolderFilterCombo_SelectionChanged" />
+                        <Button Grid.Column="1" Margin="4,0,0,0" Click="CreateFolderButton_Click" Content="+" ToolTip="新建分类" />
+                        <Button x:Name="RenameFolderButton" Grid.Column="2" Margin="4,0,0,0" Click="RenameFolderButton_Click" Content="✎" ToolTip="重命名当前分类" />
+                        <Button x:Name="DeleteFolderButton" Grid.Column="3" Margin="4,0,0,0" Click="DeleteFolderButton_Click" Content="−" ToolTip="删除当前分类" />
+                    </Grid>
+                    <Grid Grid.Row="4" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="FavoritesOnlyCheckBox"
+                                  Margin="4,0,8,0"
+                                  VerticalAlignment="Center"
+                                  Foreground="#D7E2E8"
+                                  Checked="LibraryFilter_Changed"
+                                  Unchecked="LibraryFilter_Changed"
+                                  Content="仅收藏" />
+                        <ComboBox x:Name="TagFilterCombo"
+                                  Grid.Column="1"
+                                  Height="28"
+                                  ItemsSource="{Binding TagFilters}"
+                                  DisplayMemberPath="DisplayName"
+                                  SelectionChanged="LibraryFilter_Changed" />
+                    </Grid>
+                    <ListBox x:Name="LibraryList"
+                             Grid.Row="5"
+                             ItemsSource="{Binding LibraryDocuments}"
+                             MouseDoubleClick="LibraryList_MouseDoubleClick"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="White"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,0,0,5" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="8" CornerRadius="4">
+                                    <Border.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="编辑分类、标签与收藏..." Click="EditDocumentOrganization_Click" />
+                                            <MenuItem Header="切换收藏状态" Click="ToggleFavorite_Click" />
+                                            <Separator />
+                                            <MenuItem Header="从文献库移除（保留受管理文件）" Click="RemoveDocumentKeepFile_Click" />
+                                            <MenuItem Header="永久删除受管理副本..." Click="DeleteManagedDocument_Click" />
+                                        </ContextMenu>
+                                    </Border.ContextMenu>
+                                    <StackPanel>
+                                        <DockPanel>
+                                            <TextBlock Margin="0,0,6,0" Foreground="#F4C95D" Text="★">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" Text="{Binding Title}" />
+                                        </DockPanel>
+                                        <TextBlock Margin="0,4,0,0" FontSize="10" Foreground="#AFC1CC" Text="{Binding Authors, TargetNullValue=本地 PDF}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Margin="0,3,0,0" FontSize="10" Foreground="#7FC0C8" Text="{Binding ClassificationSummary}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+
+                <TextBlock Grid.Row="3" Foreground="#8FA8B7" Text="阶段 1 · 本地文献库" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="34" />
+            </Grid.RowDefinitions>
+
+            <Border Background="#E5E9EB" BorderBrush="#C7CDD1" BorderThickness="0,0,0,1">
+                <ListBox x:Name="ReaderTabsList"
+                         ItemsSource="{Binding OpenTabs}"
+                         SelectionChanged="ReaderTabsList_SelectionChanged"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="4,4,0,3" />
+                            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid MinWidth="130" MaxWidth="260" Height="33">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="30" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Margin="10,0,4,0"
+                                           VerticalAlignment="Center"
+                                           Foreground="#263D4C"
+                                           Text="{Binding Title}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <Button Grid.Column="1"
+                                        Width="24"
+                                        Height="24"
+                                        Margin="0,0,3,0"
+                                        Padding="0"
+                                        Click="CloseTabButton_Click"
+                                        Content="×"
+                                        ToolTip="关闭标签" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <Grid Grid.Row="1">
+                <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Width="88" Height="112" Margin="0,0,0,24" Background="White" CornerRadius="4">
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="38" Foreground="{StaticResource PaperBridgeAccentBrush}" Text="PDF" />
+                    </Border>
+                    <TextBlock HorizontalAlignment="Center" FontSize="27" FontWeight="SemiBold" Foreground="#173247" Text="本地英文文献库" />
+                    <TextBlock Width="540" Margin="0,12,0,0" TextAlignment="Center" TextWrapping="Wrap" FontSize="15" Foreground="#5C6870"
+                               Text="从左侧导入带正常文本层的 PDF。原文件保持不变，程序使用受管理副本进行阅读。" />
+                </StackPanel>
+
+                <Grid x:Name="DocumentReader" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="215" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="340" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Background="#F3F5F6" BorderBrush="#C9CFD3" BorderThickness="0,0,1,0">
+                        <TabControl Background="Transparent" BorderThickness="0">
+                            <TabItem Header="目录">
+                                <Grid>
+                                    <TextBlock x:Name="OutlineEmptyText"
+                                               Margin="16"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               Foreground="#72808A"
+                                               Text="PDF 未提供目录" />
+                                    <TreeView x:Name="OutlineTree"
+                                              ItemsSource="{Binding ActiveTab.OutlineItems}"
+                                              SelectedItemChanged="OutlineTree_SelectedItemChanged"
+                                              Background="Transparent"
+                                              BorderThickness="0">
+                                        <TreeView.ItemTemplate>
+                                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                                <TextBlock Margin="2,3" TextWrapping="Wrap" Text="{Binding Title}" />
+                                            </HierarchicalDataTemplate>
+                                        </TreeView.ItemTemplate>
+                                    </TreeView>
+                                </Grid>
+                            </TabItem>
+                            <TabItem Header="缩略图">
+                                <ListBox x:Name="ThumbnailList"
+                                         ItemsSource="{Binding ActiveTab.Thumbnails}"
+                                         SelectionChanged="ThumbnailList_SelectionChanged"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         VirtualizingPanel.IsVirtualizing="True"
+                                         VirtualizingPanel.VirtualizationMode="Recycling">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            <EventSetter Event="Loaded" Handler="ThumbnailContainer_Loaded" />
+                                            <EventSetter Event="Unloaded" Handler="ThumbnailContainer_Unloaded" />
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="8">
+                                                <Border MinHeight="170" Background="White" BorderBrush="#B5BCC1" BorderThickness="1">
+                                                    <Grid>
+                                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" Foreground="#72808A" Text="{Binding Status}" />
+                                                        <Image MaxWidth="155" Stretch="Uniform" Source="{Binding Image}" />
+                                                    </Grid>
+                                                </Border>
+                                                <TextBlock Margin="0,5,0,0" HorizontalAlignment="Center" Foreground="#53636E" Text="{Binding PageLabel}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </TabItem>
+                            <TabItem Header="批注">
+                                <Grid Margin="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <ComboBox x:Name="AnnotationFilterCombo" SelectionChanged="AnnotationFilterCombo_SelectionChanged" SelectedIndex="0">
+                                        <ComboBoxItem Tag="All" Content="全部" />
+                                        <ComboBoxItem Tag="Highlight" Content="高亮" />
+                                        <ComboBoxItem Tag="Underline" Content="下划线" />
+                                        <ComboBoxItem Tag="Note" Content="批注" />
+                                        <ComboBoxItem Tag="Bookmark" Content="书签" />
+                                        <ComboBoxItem Tag="Invalid" Content="失效锚点" />
+                                    </ComboBox>
+                                    <ListBox x:Name="AnnotationList"
+                                             Grid.Row="1"
+                                             Margin="0,8"
+                                             ItemsSource="{Binding ActiveTab.Annotations}"
+                                             SelectionChanged="AnnotationList_SelectionChanged"
+                                             Background="Transparent"
+                                             BorderThickness="0">
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /></Style>
+                                        </ListBox.ItemContainerStyle>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="0,0,0,6" Padding="7" Background="White" BorderBrush="#CDD2D5" BorderThickness="1">
+                                                    <StackPanel>
+                                                        <DockPanel>
+                                                            <TextBlock FontWeight="SemiBold" Text="{Binding KindText}" />
+                                                            <TextBlock DockPanel.Dock="Right" FontSize="11" Foreground="#65737C" Text="{Binding PageLabel}" />
+                                                        </DockPanel>
+                                                        <TextBlock Margin="0,5,0,0" MaxHeight="52" Text="{Binding Preview}" TextWrapping="Wrap" />
+                                                        <TextBlock Margin="0,4,0,0" FontSize="10" Foreground="#806B3D" Text="{Binding Detail}" TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                        <Button x:Name="NavigateAnnotationButton" Width="58" Margin="0,0,5,0" Click="NavigateAnnotationButton_Click" Content="定位" IsEnabled="False" />
+                                        <Button x:Name="EditAnnotationButton" Width="58" Margin="0,0,5,0" Click="EditAnnotationButton_Click" Content="编辑" IsEnabled="False" />
+                                        <Button x:Name="DeleteAnnotationButton" Width="58" Click="DeleteAnnotationButton_Click" Content="删除" IsEnabled="False" />
+                                    </StackPanel>
+                                </Grid>
+                            </TabItem>
+                        </TabControl>
+                    </Border>
+
+                    <Border Grid.Column="1" Panel.ZIndex="3" Height="72" VerticalAlignment="Top" Background="#F8F8F6" BorderBrush="#C9CFD3" BorderThickness="0,0,0,1">
+                        <Grid Margin="8,4">
+                            <Grid.RowDefinitions><RowDefinition Height="30" /><RowDefinition Height="30" /></Grid.RowDefinitions>
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                    <Button Width="58" Margin="0,0,5,0" Click="ShowPdfViewButton_Click" Content="PDF" />
+                                    <Button Width="82" Margin="0,0,5,0" Click="ShowParagraphViewButton_Click" Content="段落双语" />
+                                    <Button Width="82" Margin="0,0,5,0" Click="ShowComparisonViewButton_Click" Content="左右对照" />
+                                    <Button Width="65" Margin="0,0,5,0" Click="ShowTranslationPopupButton_Click" Content="浮窗" />
+                                    <Button Width="74" Margin="8,0,5,0" Click="TranslateBilingualPageButton_Click" Content="翻译本页" />
+                                    <Button Width="74" Margin="0,0,5,0" Click="TranslateFullDocumentButton_Click" Content="全文翻译" />
+                                    <Button x:Name="CancelFullTranslationButton" Width="74" Click="CancelFullTranslationButton_Click" Content="取消全文" IsEnabled="False" />
+                                </StackPanel>
+                                <TextBlock x:Name="QueueStatusText" Margin="10,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#64737C" Text="队列 0 · 执行 0" />
+                            </DockPanel>
+                            <DockPanel Grid.Row="1" Margin="0,3,0,0">
+                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                    <Button Width="64" Margin="0,0,5,0" Click="CreateHighlightButton_Click" Content="高亮" />
+                                    <Button Width="72" Margin="0,0,5,0" Click="CreateUnderlineButton_Click" Content="下划线" />
+                                    <Button Width="64" Margin="0,0,5,0" Click="CreateNoteButton_Click" Content="批注" />
+                                    <Button Width="64" Click="ToggleBookmarkButton_Click" Content="书签" />
+                                </StackPanel>
+                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="11" Foreground="#64737C" Text="先在右侧原文框选择文字；锚点保存为 PDF 坐标" />
+                            </DockPanel>
+                        </Grid>
+                    </Border>
+
+                    <ListBox x:Name="PagesList"
+                         Grid.Column="1"
+                         Margin="0,72,0,0"
+                         Background="#D9DDE0"
+                         BorderThickness="0"
+                         ItemsSource="{Binding ActiveTab.Pages}"
+                         ScrollViewer.ScrollChanged="PagesList_ScrollChanged"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         VirtualizingPanel.CacheLength="1,2"
+                         VirtualizingPanel.CacheLengthUnit="Page">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel VirtualizationMode="Recycling" ScrollUnit="Pixel" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Focusable" Value="False" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0" />
+                            <EventSetter Event="Loaded" Handler="PageContainer_Loaded" />
+                            <EventSetter Event="Unloaded" Handler="PageContainer_Unloaded" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="28,18">
+                                <TextBlock Margin="4,0,0,8" FontWeight="SemiBold" Foreground="#40515D" Text="{Binding Header}" />
+                                <Border MinHeight="620" Padding="1" HorizontalAlignment="Center" Background="White" BorderBrush="#B5BCC1" BorderThickness="1">
+                                    <Grid>
+                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#72808A" Text="{Binding Status}" />
+                                        <Image x:Name="PageImage" MaxWidth="920" Stretch="Uniform" Source="{Binding Image}" />
+                                        <local:AnnotationOverlay Width="{Binding ElementName=PageImage, Path=ActualWidth}"
+                                                                 Height="{Binding ElementName=PageImage, Path=ActualHeight}"
+                                                                 HorizontalAlignment="Center"
+                                                                 VerticalAlignment="Center"
+                                                                 IsHitTestVisible="False"
+                                                                 ItemsSource="{Binding AnnotationOverlays}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Border x:Name="BilingualViewHost"
+                            Grid.Column="1"
+                            Margin="0,72,0,0"
+                            Panel.ZIndex="2"
+                            Background="#EEF1F2"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <DockPanel Margin="14,10,14,8">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Width="62" Margin="0,0,5,0" Click="PreviousBilingualPageButton_Click" Content="上一页" />
+                                    <Button Width="62" Click="NextBilingualPageButton_Click" Content="下一页" />
+                                </StackPanel>
+                                <TextBlock x:Name="BilingualLayoutStatusText" VerticalAlignment="Center" Foreground="#40515D" TextWrapping="Wrap" Text="尚未生成双语内容" />
+                            </DockPanel>
+
+                            <ListBox x:Name="ParagraphBilingualList"
+                                     Grid.Row="1"
+                                     Margin="12,0,12,12"
+                                     ItemsSource="{Binding ActiveTab.BilingualSegments}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     SelectionChanged="BilingualList_SelectionChanged"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     VirtualizingPanel.IsVirtualizing="True"
+                                     VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="Margin" Value="0,0,0,10" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="14" Background="White" BorderBrush="#CDD2D5" BorderThickness="1" CornerRadius="3">
+                                            <StackPanel>
+                                                <DockPanel>
+                                                    <TextBlock FontSize="11" Foreground="#6A7881" Text="{Binding PageLabel}" />
+                                                    <TextBlock DockPanel.Dock="Right" FontSize="11" Foreground="#806B3D" Text="{Binding TranslationKind}" />
+                                                </DockPanel>
+                                                <TextBlock Margin="0,8,0,10" FontSize="14" Foreground="#273944" Text="{Binding SourceText}" TextWrapping="Wrap" />
+                                                <TextBox MinHeight="54" Padding="8" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                                         Text="{Binding EditableTranslation, UpdateSourceTrigger=PropertyChanged}" />
+                                                <StackPanel Margin="0,8,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+                                                    <Button Width="88" Margin="0,0,6,0" Click="CompareBilingualTranslationButton_Click" Content="对比机器稿" />
+                                                    <Button Width="88" Margin="0,0,6,0" Click="RestoreMachineTranslationButton_Click" Content="恢复机器稿" />
+                                                    <Button Width="88" Click="SaveBilingualEditButton_Click" Content="保存编辑稿" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Grid x:Name="ComparisonGrid" Grid.Row="1" Margin="12,0,12,12" Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <ListBox x:Name="ComparisonOriginalList"
+                                         ItemsSource="{Binding ActiveTab.BilingualSegments}"
+                                         SelectionChanged="BilingualList_SelectionChanged"
+                                         ScrollViewer.ScrollChanged="ComparisonOriginalList_ScrollChanged">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /></Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="5" Padding="12" Background="White" BorderBrush="#CDD2D5" BorderThickness="1">
+                                                <StackPanel>
+                                                    <TextBlock FontSize="11" Foreground="#6A7881" Text="{Binding PageLabel}" />
+                                                    <TextBlock Margin="0,7,0,0" Text="{Binding SourceText}" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <ListBox x:Name="ComparisonTranslationList"
+                                         Grid.Column="2"
+                                         ItemsSource="{Binding ActiveTab.BilingualSegments}"
+                                         SelectionChanged="BilingualList_SelectionChanged"
+                                         ScrollViewer.ScrollChanged="ComparisonTranslationList_ScrollChanged">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /></Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="5" Padding="12" Background="#FFFDF5" BorderBrush="#D8D0B9" BorderThickness="1">
+                                                <StackPanel>
+                                                    <TextBlock FontSize="11" Foreground="#806B3D" Text="{Binding TranslationKind}" />
+                                                    <TextBlock Margin="0,7,0,0" Text="{Binding EditableTranslation}" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Background="#FAFAF8" BorderBrush="#C9CFD3" BorderThickness="1,0,0,0">
+                        <TabControl Background="Transparent" BorderThickness="0">
+                            <TabItem Header="翻译">
+                                <Grid Margin="14">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <DockPanel>
+                                <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Foreground="#173247" Text="英译中" />
+                                <Button DockPanel.Dock="Right" Padding="9,4" Click="TranslationSettingsButton_Click" Content="设置" />
+                            </DockPanel>
+                            <TextBlock Grid.Row="1" Margin="0,7,0,10" FontSize="11" Foreground="#65737C" TextWrapping="Wrap"
+                                       Text="仅在触发翻译时向所选服务商发送必要文本。" />
+                            <DockPanel Grid.Row="2" Margin="0,0,0,6">
+                                <TextBlock x:Name="TranslationPageLabel" VerticalAlignment="Center" Foreground="#40515D" Text="尚未载入页面文本" />
+                                <Button DockPanel.Dock="Right" Padding="7,3" Click="LoadCurrentPageTextButton_Click" Content="载入当前页" />
+                            </DockPanel>
+                            <TextBox x:Name="TranslationSourceTextBox"
+                                     Grid.Row="3"
+                                     Padding="8"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     SelectionChanged="TranslationSourceTextBox_SelectionChanged"
+                                     ToolTip="在这里选择单词、句子或段落，也可以直接编辑待译文字。" />
+                            <UniformGrid Grid.Row="4" Margin="0,9,0,0" Columns="5">
+                                <Button Margin="0,0,4,0" Padding="3,5" Tag="Word" Click="TranslateButton_Click" Content="单词" />
+                                <Button Margin="0,0,4,0" Padding="3,5" Tag="Selection" Click="TranslateButton_Click" Content="选区" />
+                                <Button Margin="0,0,4,0" Padding="3,5" Tag="Sentence" Click="TranslateButton_Click" Content="句子" />
+                                <Button Margin="0,0,4,0" Padding="3,5" Tag="Paragraph" Click="TranslateButton_Click" Content="段落" />
+                                <Button Padding="3,5" Tag="Page" Click="TranslateButton_Click" Content="当前页" />
+                            </UniformGrid>
+                            <TextBlock x:Name="TranslationStateText"
+                                       Grid.Row="5"
+                                       Margin="0,8,0,6"
+                                       Foreground="#53636E"
+                                       TextWrapping="Wrap"
+                                       Text="请选择文字或翻译当前页" />
+                            <TextBox x:Name="TranslationOutputTextBox"
+                                     Grid.Row="6"
+                                     Padding="8"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     TextChanged="TranslationOutputTextBox_TextChanged"
+                                     VerticalScrollBarVisibility="Auto" />
+                            <StackPanel Grid.Row="7" Margin="0,9,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+                                <Button x:Name="LearnTermButton" Width="106" Margin="0,0,6,0" Click="LearnTermButton_Click" Content="确认术语…" IsEnabled="False" />
+                                <Button x:Name="CancelTranslationButton" Width="72" Margin="0,0,6,0" Click="CancelTranslationButton_Click" Content="取消" IsEnabled="False" />
+                                <Button x:Name="RetryTranslationButton" Width="72" Click="RetryTranslationButton_Click" Content="重试" IsEnabled="False" />
+                            </StackPanel>
+                                </Grid>
+                            </TabItem>
+                            <TabItem Header="AI 助读">
+                                <Grid Margin="12">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock FontSize="18" FontWeight="SemiBold" Foreground="#173247" Text="AI 阅读辅助" />
+                                    <TextBlock Grid.Row="1" Margin="0,7,0,9" FontSize="11" Foreground="#65737C" TextWrapping="Wrap"
+                                               Text="仅在明确操作时发送必要文本；问答页码和英文证据由本地反查。" />
+                                    <UniformGrid Grid.Row="2" Columns="2" Rows="2">
+                                        <Button Margin="0,0,4,4" Padding="4,6" Click="ExplainSelectionButton_Click" Content="解释选区" />
+                                        <Button Margin="4,0,0,4" Padding="4,6" Click="TranslateExplainSelectionButton_Click" Content="翻译并解释" />
+                                        <Button Margin="0,4,4,0" Padding="4,6" Click="SummarizeSectionButton_Click" Content="总结当前章节" />
+                                        <Button Margin="4,4,0,0" Padding="4,6" Click="SummarizeDocumentButton_Click" Content="总结整篇论文" />
+                                    </UniformGrid>
+                                    <DockPanel Grid.Row="3" Margin="0,9,0,7">
+                                        <Button x:Name="ReadingCancelButton" DockPanel.Dock="Right" Width="62" Click="CancelReadingButton_Click" Content="取消" IsEnabled="False" />
+                                        <TextBlock x:Name="ReadingStatusText" Margin="0,0,7,0" VerticalAlignment="Center" Foreground="#53636E" TextWrapping="Wrap"
+                                                   Text="可解释选区、总结或就当前文献提问" />
+                                    </DockPanel>
+                                    <TabControl Grid.Row="4">
+                                        <TabItem Header="结果">
+                                            <TextBox x:Name="ReadingOutputTextBox" Padding="8" AcceptsReturn="True" IsReadOnly="True"
+                                                     TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+                                        </TabItem>
+                                        <TabItem Header="当前文献问答">
+                                            <Grid Margin="7">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="*" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="*" />
+                                                </Grid.RowDefinitions>
+                                                <ListBox ItemsSource="{Binding ActiveTab.ReadingMessages}" Background="Transparent" BorderThickness="0"
+                                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                    <ListBox.ItemContainerStyle>
+                                                        <Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /></Style>
+                                                    </ListBox.ItemContainerStyle>
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Margin="0,0,0,5" Padding="7" Background="#F7F5EF" BorderBrush="#D8D0B9" BorderThickness="1">
+                                                                <StackPanel>
+                                                                    <TextBlock FontSize="10" FontWeight="SemiBold" Foreground="#806B3D" Text="{Binding Speaker}" />
+                                                                    <TextBlock Margin="0,3,0,0" Text="{Binding Text}" TextWrapping="Wrap" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
+                                                <TextBox x:Name="ReadingQuestionTextBox" Grid.Row="1" MinHeight="48" Margin="0,7,0,5" Padding="6"
+                                                         AcceptsReturn="True" TextWrapping="Wrap" TextChanged="ReadingQuestionTextBox_TextChanged"
+                                                         ToolTip="仅检索当前打开的文献" />
+                                                <StackPanel Grid.Row="2" Margin="0,0,0,7" HorizontalAlignment="Right" Orientation="Horizontal">
+                                                    <Button Width="64" Margin="0,0,5,0" Click="ClearReadingConversationButton_Click" Content="清空" />
+                                                    <Button x:Name="AskReadingQuestionButton" Width="76" Click="AskReadingQuestionButton_Click" Content="有据问答" />
+                                                </StackPanel>
+                                                <ListBox x:Name="ReadingEvidenceList" Grid.Row="3" ItemsSource="{Binding ActiveTab.ReadingEvidence}"
+                                                         Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                    <ListBox.ItemContainerStyle>
+                                                        <Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /></Style>
+                                                    </ListBox.ItemContainerStyle>
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Margin="0,0,0,6" Padding="7" Background="White" BorderBrush="#CDD2D5" BorderThickness="1">
+                                                                <StackPanel>
+                                                                    <DockPanel>
+                                                                        <TextBlock FontWeight="SemiBold" Text="{Binding CitationId}" />
+                                                                        <Button DockPanel.Dock="Right" Padding="6,2" Click="NavigateEvidenceButton_Click" Content="{Binding PageLabel}" />
+                                                                    </DockPanel>
+                                                                    <TextBlock Margin="0,3,0,0" FontSize="10" Foreground="#65737C" Text="{Binding SectionTitle}" TextWrapping="Wrap" />
+                                                                    <TextBlock Margin="0,4,0,0" MaxHeight="72" FontSize="11" Text="{Binding EnglishExcerpt}" TextWrapping="Wrap" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
+                                            </Grid>
+                                        </TabItem>
+                                    </TabControl>
+                                </Grid>
+                            </TabItem>
+                        </TabControl>
+                    </Border>
+                </Grid>
+
+                <Popup x:Name="TranslationPopup"
+                       Placement="MousePoint"
+                       StaysOpen="False"
+                       AllowsTransparency="True">
+                    <Border Width="420" MaxHeight="320" Padding="14" Background="#FFFDF5" BorderBrush="#8A7951" BorderThickness="1" CornerRadius="5">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="#806B3D" Text="翻译浮窗" />
+                                <TextBlock x:Name="TranslationPopupText" Margin="0,8,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Popup>
+            </Grid>
+
+            <Border Grid.Row="2" Background="#EEF0F1" BorderBrush="#CDD2D5" BorderThickness="0,1,0,0">
+                <TextBlock x:Name="StatusText" Margin="12,0" VerticalAlignment="Center" Foreground="#53636E" Text="准备就绪" />
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

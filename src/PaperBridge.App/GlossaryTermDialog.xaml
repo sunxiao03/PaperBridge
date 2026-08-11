@@ -1,0 +1,62 @@
+<Window x:Class="PaperBridge.App.GlossaryTermDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="术语词条"
+        Width="620"
+        Height="650"
+        MinWidth="520"
+        MinHeight="560"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="132" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Margin="0,7" Text="英文术语 *" />
+                <TextBox x:Name="EnglishBox" Grid.Column="1" Margin="0,3" Padding="7,4" />
+                <TextBlock Grid.Row="1" Margin="0,7" Text="首选中文 *" />
+                <TextBox x:Name="ChineseBox" Grid.Row="1" Grid.Column="1" Margin="0,3" Padding="7,4" />
+                <TextBlock Grid.Row="2" Margin="0,7" Text="英文别名" />
+                <TextBox x:Name="EnglishAliasesBox" Grid.Row="2" Grid.Column="1" Margin="0,3" Padding="7,4" ToolTip="使用分号分隔" />
+                <TextBlock Grid.Row="3" Margin="0,7" Text="中文别名" />
+                <TextBox x:Name="ChineseAliasesBox" Grid.Row="3" Grid.Column="1" Margin="0,3" Padding="7,4" ToolTip="使用分号分隔" />
+                <TextBlock Grid.Row="4" Margin="0,7" Text="类别" />
+                <TextBox x:Name="CategoryBox" Grid.Row="4" Grid.Column="1" Margin="0,3" Padding="7,4" />
+                <TextBlock Grid.Row="5" Margin="0,7" Text="简短解释" />
+                <TextBox x:Name="ExplanationBox" Grid.Row="5" Grid.Column="1" Height="70" Margin="0,3" Padding="7,4" AcceptsReturn="True" TextWrapping="Wrap" />
+                <TextBlock Grid.Row="6" Margin="0,7" Text="备注" />
+                <TextBox x:Name="NotesBox" Grid.Row="6" Grid.Column="1" Height="58" Margin="0,3" Padding="7,4" AcceptsReturn="True" TextWrapping="Wrap" />
+                <TextBlock Grid.Row="7" Margin="0,7" Text="来源参考" />
+                <TextBox x:Name="SourceReferenceBox" Grid.Row="7" Grid.Column="1" Margin="0,3" Padding="7,4" />
+                <TextBlock Grid.Row="8" Margin="0,7" Text="优先级" />
+                <TextBox x:Name="PriorityBox" Grid.Row="8" Grid.Column="1" Width="100" Margin="0,3" Padding="7,4" HorizontalAlignment="Left" Text="0" />
+                <TextBlock Grid.Row="9" Margin="0,7" Text="审核状态" />
+                <ComboBox x:Name="ReviewStatusBox" Grid.Row="9" Grid.Column="1" Width="150" Margin="0,3" HorizontalAlignment="Left" />
+            </Grid>
+        </ScrollViewer>
+        <StackPanel Grid.Row="1" Margin="0,16,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Width="84" Margin="0,0,8,0" IsCancel="True" Content="取消" />
+            <Button Width="84" IsDefault="True" Click="SaveButton_Click" Content="保存" />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,28 @@
+<Window x:Class="PaperBridge.App.TranslationComparisonDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="机器译文与用户编辑稿"
+        Width="900"
+        Height="560"
+        MinWidth="680"
+        MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="12" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <TextBlock FontSize="16" FontWeight="SemiBold" Text="最新机器译文" />
+        <TextBlock Grid.Column="2" FontSize="16" FontWeight="SemiBold" Text="当前用户稿" />
+        <TextBox x:Name="MachineTextBox" Grid.Row="1" Margin="0,10,0,0" Padding="10" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+        <TextBox x:Name="UserTextBox" Grid.Row="1" Grid.Column="2" Margin="0,10,0,0" Padding="10" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+        <Button Grid.Row="2" Grid.ColumnSpan="3" Width="84" Margin="0,12,0,0" HorizontalAlignment="Right" IsCancel="True" Content="关闭" />
+    </Grid>
+</Window>

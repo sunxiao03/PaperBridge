@@ -1,0 +1,17 @@
+root = true
+
+[*.{cs,xaml}]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+[*.cs]
+indent_style = space
+indent_size = 4
+dotnet_sort_system_directives_first = true
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_when_type_is_apparent = true:suggestion
+
+[*.{csproj,props,targets,slnx,xaml,yml,yaml,json,md}]
+indent_style = space
+indent_size = 2

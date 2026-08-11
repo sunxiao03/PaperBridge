@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PaperBridge.App/PaperBridge.App.csproj" />
+    <Project Path="src/PaperBridge.Application/PaperBridge.Application.csproj" />
+    <Project Path="src/PaperBridge.Domain/PaperBridge.Domain.csproj" />
+    <Project Path="src/PaperBridge.Infrastructure/PaperBridge.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PaperBridge.Domain.Tests/PaperBridge.Domain.Tests.csproj" />
+    <Project Path="tests/PaperBridge.Infrastructure.Tests/PaperBridge.Infrastructure.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/PaperBridge.PdfProbe/PaperBridge.PdfProbe.csproj" />
+  </Folder>
+</Solution>

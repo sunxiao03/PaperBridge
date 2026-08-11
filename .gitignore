@@ -1,0 +1,44 @@
+# Build output
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+
+# Local development state
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local application data and documents
+.local/
+data/
+library/
+logs/
+*.db
+*.db-shm
+*.db-wal
+*.pdf
+output/smoke/
+!output/pdf/pdfium-text-layer-sample.pdf
+
+# Secrets and environment overrides
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+secrets.json
+
+# Native/local SDK downloads
+.dotnet/
+native/
+tmp/
+
+# Packaging
+publish/
+dist/
+*.msix
+*.msixbundle
+*.appx
