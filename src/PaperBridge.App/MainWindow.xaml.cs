@@ -30,7 +30,7 @@ namespace PaperBridge.App;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
-    private const double PreviewScale = 1.35;
+    private const double PreviewScale = 2.25;
     private const double ThumbnailScale = 0.26;
     private readonly AppDataPaths _paths;
     private readonly ManagedDocumentLibrary _library;
@@ -61,6 +61,9 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private string? _translationUnavailableMessage = "尚未配置 API Key；请打开设置。";
     private int _bilingualRefreshVersion;
     private bool _syncingComparisonScroll;
+    private bool _librarySidebarCollapsed;
+    private bool _readerNavigationCollapsed;
+    private Window? _readingAssistantWindow;
 
     public MainWindow()
     {
@@ -115,6 +118,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     protected override void OnClosed(EventArgs e)
     {
         _readingPositionTimer.Stop();
+        _readingAssistantWindow?.Close();
         if (_libraryInitialized && ActiveTab is { } activeTab)
         {
             try
@@ -704,8 +708,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         {
             MessageBox.Show(
                 this,
-                "请先点击右侧“载入当前页”，再选择要标记的原文。",
-                "尚未载入当前页原文",
+                "请先在当前 PDF 页面上拖选要标记的原文。",
+                "当前页没有原文选区",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             return;
@@ -716,7 +720,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var selectedText = TranslationSourceTextBox.SelectedText.Trim();
         if (selectionLength <= 0 || selectedText.Length == 0)
         {
-            MessageBox.Show(this, "请先在右侧原文框中选择文字。", "没有原文选区", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, "请先在 PDF 原文上拖选文字。", "没有原文选区", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -732,7 +736,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             var page = await tab.Document.ExtractPageTextAsync(pageIndex, tab.Lifetime.Token);
             if (!string.Equals(page.Text, TranslationSourceTextBox.Text, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException("原文框内容已被编辑，无法把当前选区可靠映射回 PDF；请重新载入当前页。");
+                throw new InvalidOperationException("PDF 文字层已经变化，无法可靠映射当前选区；请重新在原文上拖选。");
             }
 
             var annotation = AnnotationAnchorService.CreateTextAnnotation(
@@ -1036,33 +1040,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         SetBilingualDisplayMode(tab, BilingualDisplayMode.Comparison);
         await RefreshBilingualViewAsync(tab, tab.LastKnownPageIndex);
         QueueCurrentPageAndPrefetch(tab);
-    }
-
-    private void ShowTranslationPopupButton_Click(object sender, RoutedEventArgs e)
-    {
-        var translation = TranslationOutputTextBox.SelectedText.Trim();
-        if (translation.Length == 0)
-        {
-            translation = TranslationOutputTextBox.Text.Trim();
-        }
-
-        if (translation.Length == 0)
-        {
-            if (ActiveTab?.BilingualSegments.FirstOrDefault() is { } segment)
-            {
-                translation = segment.EditableTranslation;
-            }
-        }
-
-        if (translation.Length == 0)
-        {
-            StatusText.Text = "当前没有可显示的译文";
-            return;
-        }
-
-        TranslationPopupText.Text = translation;
-        TranslationPopup.PlacementTarget = TranslationSourceTextBox;
-        TranslationPopup.IsOpen = true;
     }
 
     private void TranslateBilingualPageButton_Click(object sender, RoutedEventArgs e)
@@ -1525,13 +1502,63 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private void UpdateQueueStatus() =>
         QueueStatusText.Text = $"队列 {_bilingualWorkQueue.PendingCount} · 执行 {_bilingualWorkQueue.ActiveCount}";
 
-    private async void LoadCurrentPageTextButton_Click(object sender, RoutedEventArgs e)
+    private void LibrarySidebarToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        if (ActiveTab is { } tab)
+        _librarySidebarCollapsed = !_librarySidebarCollapsed;
+        LibrarySidebarColumn.Width = _librarySidebarCollapsed ? new GridLength(0) : new GridLength(280);
+        LibrarySidebar.Visibility = _librarySidebarCollapsed ? Visibility.Collapsed : Visibility.Visible;
+        LibrarySidebarToggleButton.ToolTip = _librarySidebarCollapsed ? "展开文献栏" : "收起文献栏";
+    }
+
+    private void ReaderNavigationToggleButton_Click(object sender, RoutedEventArgs e)
+    {
+        _readerNavigationCollapsed = !_readerNavigationCollapsed;
+        ReaderNavigationColumn.Width = _readerNavigationCollapsed ? new GridLength(0) : new GridLength(215);
+    }
+
+    private void ShowReadingAssistantButton_Click(object sender, RoutedEventArgs e) =>
+        ShowReadingAssistantWindow();
+
+    private void ShowReadingAssistantWindow()
+    {
+        if (_readingAssistantWindow is { } existing)
         {
-            CaptureReadingPosition(tab);
-            await LoadTranslationSourcePageAsync(tab, force: true);
+            if (existing.WindowState == WindowState.Minimized)
+            {
+                existing.WindowState = WindowState.Normal;
+            }
+
+            existing.Activate();
+            return;
         }
+
+        if (ActiveTab is { } activeTab)
+        {
+            UpdateReadingAssistantContext(activeTab);
+        }
+
+        ReadingAssistantHost.Content = null;
+        var window = new Window
+        {
+            Title = ActiveTab is null ? "PaperBridge · AI 阅读辅助" : $"AI 阅读辅助 · {ActiveTab.Title}",
+            Owner = this,
+            DataContext = this,
+            Content = ReadingAssistantPanel,
+            Width = 620,
+            Height = 760,
+            MinWidth = 480,
+            MinHeight = 560,
+            Background = new SolidColorBrush(Color.FromRgb(250, 250, 248)),
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        window.Closed += (_, _) =>
+        {
+            window.Content = null;
+            ReadingAssistantHost.Content = ReadingAssistantPanel;
+            _readingAssistantWindow = null;
+        };
+        _readingAssistantWindow = window;
+        window.Show();
     }
 
     private async void ExplainSelectionButton_Click(object sender, RoutedEventArgs e) =>
@@ -1547,10 +1574,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
-        var selection = TranslationSourceTextBox.SelectedText.Trim();
+        var selection = tab.LastTranslationInput.Trim();
         if (selection.Length == 0)
         {
-            SetReadingStatus(tab, "请先在翻译页签的原文框中选择要解释的英文。");
+            SetReadingStatus(tab, "请先在 PDF 原文上拖选要解释的英文。");
             return;
         }
 
@@ -1560,7 +1587,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
-        var context = CreateBoundedContext(TranslationSourceTextBox.Text, selection);
+        var context = CreateBoundedContext(tab.TranslationSourceText, selection);
         var completed = await ExecuteReadingActionAsync(
             tab,
             includeTranslation ? "正在翻译并解释选区..." : "正在解释选区...",
@@ -1585,8 +1612,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             });
         if (completed && ReferenceEquals(ActiveTab, tab))
         {
-            TranslationPopupText.Text = tab.ReadingAssistantOutput;
-            TranslationPopup.IsOpen = true;
+            ShowReadingAssistantWindow();
         }
     }
 
@@ -1605,6 +1631,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 var corpus = await GetReadingCorpusAsync(tab, token);
                 var pageIndex = Math.Clamp(tab.LastKnownPageIndex, 0, corpus.PageCount - 1);
                 var section = corpus.Sections.Last(item => item.StartPageIndex <= pageIndex);
+                SetReadingStatus(tab, $"正在总结：{FormatSectionRange(section)}...");
                 var chunks = corpus.Chunks.Where(chunk =>
                     chunk.PageIndex >= section.StartPageIndex && chunk.PageIndex < section.EndPageIndexExclusive).ToArray();
                 if (chunks.Length == 0)
@@ -1884,6 +1911,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         var request = tab.BeginReadingRequest();
         ReadingCancelButton.IsEnabled = true;
         AskReadingQuestionButton.IsEnabled = false;
+        UpdateReadingAssistantControls(tab);
         SetReadingStatus(tab, initialStatus);
         try
         {
@@ -1944,7 +1972,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             if (wasCurrent && !tab.IsClosing && ReferenceEquals(ActiveTab, tab))
             {
                 ReadingCancelButton.IsEnabled = false;
-                AskReadingQuestionButton.IsEnabled = true;
+                UpdateReadingAssistantControls(tab);
             }
         }
 
@@ -1957,7 +1985,60 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         ReadingQuestionTextBox.Text = tab.ReadingQuestion;
         ReadingStatusText.Text = _translationUnavailableMessage ?? tab.ReadingAssistantStatus;
         ReadingCancelButton.IsEnabled = tab.ReadingRequest is not null;
-        AskReadingQuestionButton.IsEnabled = _readingAssistantCoordinator is not null && tab.ReadingRequest is null;
+        UpdateReadingAssistantContext(tab);
+    }
+
+    private void UpdateReadingAssistantContext(ReaderTabSession tab)
+    {
+        if (!ReferenceEquals(ActiveTab, tab))
+        {
+            return;
+        }
+
+        var hasSelection = tab.LastTranslationInput.Length > 0 && tab.TranslationPageIndex >= 0;
+        ReadingSelectionLabel.Text = hasSelection
+            ? $"当前 PDF 原文选区 · 第 {tab.TranslationPageIndex + 1} 页 · {tab.LastTranslationInput.Length:N0} 字符"
+            : "当前 PDF 原文选区 · 未选择";
+        ReadingSelectionPreview.Text = hasSelection
+            ? tab.LastTranslationInput
+            : "请回到主窗口，在 PDF 原文上拖选要解释的文字。";
+
+        var pageIndex = Math.Clamp(tab.LastKnownPageIndex, 0, tab.Document.PageCount - 1);
+        var section = DocumentCorpusBuilder.ResolveSection(
+            tab.Document.PageCount,
+            tab.OutlineItems.ToArray(),
+            pageIndex);
+        var isPageFallback = section.Title.Contains("PDF 无目录", StringComparison.Ordinal);
+        ReadingSectionScopeText.Text = isPageFallback
+            ? $"总结范围：PDF 第 {pageIndex + 1} 页。此 PDF 没有目录，因此“章节总结”明确降级为当前页总结。"
+            : $"总结范围：{FormatSectionRange(section)}。范围由主窗口当前阅读页和 PDF 目录共同确定。";
+        SummarizeCurrentSectionButton.Content = isPageFallback ? "总结当前 PDF 页" : "总结当前页所属章节";
+        UpdateReadingAssistantControls(tab);
+    }
+
+    private void UpdateReadingAssistantControls(ReaderTabSession tab)
+    {
+        if (!ReferenceEquals(ActiveTab, tab))
+        {
+            return;
+        }
+
+        var ready = _readingAssistantCoordinator is not null && tab.ReadingRequest is null;
+        var hasSelection = tab.LastTranslationInput.Length > 0 && tab.TranslationPageIndex >= 0;
+        ExplainPdfSelectionButton.IsEnabled = ready && hasSelection;
+        TranslateExplainPdfSelectionButton.IsEnabled = ready && hasSelection;
+        SummarizeCurrentSectionButton.IsEnabled = ready;
+        SummarizeWholeDocumentButton.IsEnabled = ready;
+        AskReadingQuestionButton.IsEnabled = ready;
+    }
+
+    private static string FormatSectionRange(DocumentSection section)
+    {
+        var startPage = section.StartPageIndex + 1;
+        var endPage = section.EndPageIndexExclusive;
+        return startPage == endPage
+            ? $"{section.Title} · PDF 第 {startPage} 页"
+            : $"{section.Title} · PDF 第 {startPage}–{endPage} 页";
     }
 
     private void SetReadingStatus(ReaderTabSession tab, string status)
@@ -1987,27 +2068,28 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    private async void TranslateButton_Click(object sender, RoutedEventArgs e)
+    private async void PdfTextSelectionLayer_SelectionCompleted(object sender, PdfTextSelectionEventArgs e)
     {
-        if (sender is not Button { Tag: string granularityName } ||
-            !Enum.TryParse<TranslationGranularity>(granularityName, out var granularity) ||
-            ActiveTab is not { } tab)
+        if (ActiveTab is not { } tab || e.PageIndex < 0 || e.PageIndex >= tab.Document.PageCount)
         {
             return;
         }
 
-        var source = ResolveTranslationSource(granularity);
-        if (string.IsNullOrWhiteSpace(source))
-        {
-            SetTranslationStatus(tab, granularity == TranslationGranularity.Selection
-                ? "请先在原文框中选择文字。"
-                : "当前没有可翻译的文字。");
-            return;
-        }
+        tab.LastKnownPageIndex = e.PageIndex;
+        tab.TranslationPageIndex = e.PageIndex;
+        tab.TranslationSourceText = e.PageText;
+        tab.LastTranslationGranularity = TranslationGranularity.Selection;
+        tab.LastTranslationInput = e.SelectedText;
 
-        tab.LastTranslationGranularity = granularity;
-        tab.LastTranslationInput = source;
-        await TranslateTextAsync(tab, granularity, source);
+        TranslationSourceTextBox.Text = e.PageText;
+        var start = Math.Clamp(e.SelectionStart, 0, TranslationSourceTextBox.Text.Length);
+        var length = Math.Clamp(e.SelectionLength, 0, TranslationSourceTextBox.Text.Length - start);
+        TranslationSourceTextBox.Select(start, length);
+        SelectedSourcePreview.Text = e.SelectedText;
+        TranslationPageLabel.Text = $"第 {e.PageIndex + 1} 页 · 已选 {e.SelectedText.Length:N0} 个字符";
+        UpdateReadingAssistantContext(tab);
+        SetTranslationStatus(tab, "已从 PDF 原文选取，正在翻译…", retryEnabled: false);
+        await TranslateTextAsync(tab, TranslationGranularity.Selection, e.SelectedText);
     }
 
     private void CancelTranslationButton_Click(object sender, RoutedEventArgs e)
@@ -2052,8 +2134,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             tab.TranslationPageIndex = pageIndex;
             tab.TranslationSourceText = page.Text;
             TranslationSourceTextBox.Text = page.Text;
-            TranslationPageLabel.Text = $"第 {pageIndex + 1} 页原文";
-            SetTranslationStatus(tab, page.Text.Length == 0 ? "该页没有可提取的文本。" : "可选择文字或翻译当前页。", false);
+            TranslationPageLabel.Text = $"第 {pageIndex + 1} 页 · 文字层已就绪";
+            SetTranslationStatus(tab, page.Text.Length == 0 ? "该页没有可选择的文本层。" : "请直接在 PDF 原文上拖选要翻译的文字。", false);
         }
         catch (OperationCanceledException)
         {
@@ -2162,23 +2244,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    private string ResolveTranslationSource(TranslationGranularity granularity)
-    {
-        var range = TranslationTextSelection.Resolve(
-            TranslationSourceTextBox.Text,
-            TranslationSourceTextBox.SelectionStart,
-            TranslationSourceTextBox.SelectionLength,
-            TranslationSourceTextBox.CaretIndex,
-            granularity);
-        if (range.Length <= 0)
-        {
-            return string.Empty;
-        }
-
-        TranslationSourceTextBox.Select(range.Start, range.Length);
-        return range.Text;
-    }
-
     private static string CreateBoundedContext(string pageText, string source)
     {
         if (string.IsNullOrWhiteSpace(pageText) || string.Equals(pageText.Trim(), source.Trim(), StringComparison.Ordinal))
@@ -2272,10 +2337,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     {
         TranslationSourceTextBox.Text = tab.TranslationSourceText;
         TranslationOutputTextBox.Text = tab.TranslationOutputText;
+        SelectedSourcePreview.Text = tab.LastTranslationInput.Length == 0
+            ? "请在 PDF 页面中选择要翻译的文字…"
+            : tab.LastTranslationInput;
         TranslationStateText.Text = _translationUnavailableMessage ?? tab.TranslationStatus;
         TranslationPageLabel.Text = tab.TranslationPageIndex < 0
-            ? "尚未载入页面文本"
-            : $"第 {tab.TranslationPageIndex + 1} 页原文";
+            ? "尚未选择原文"
+            : $"第 {tab.TranslationPageIndex + 1} 页 · PDF 原文选区";
         CancelTranslationButton.IsEnabled = tab.TranslationRequest is not null;
         RetryTranslationButton.IsEnabled = tab.LastTranslationInput.Length > 0;
         LearnTermButton.IsEnabled = tab.LastTranslationInput.Length > 0 && tab.TranslationOutputText.Length > 0;
@@ -2384,6 +2452,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         ActiveTab = tab;
+        if (_readingAssistantWindow is { } readingWindow)
+        {
+            readingWindow.Title = $"AI 阅读辅助 · {tab.Title}";
+        }
         SelectTabHeader(tab);
         UpdateReaderVisibility();
         RestoreTranslationPanel(tab);
@@ -2523,11 +2595,13 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         if (_pageCache.TryGet(cacheKey, out var cached) && cached is not null)
         {
             page.SetImage(CreateBitmap(cached));
+            await EnsurePageTextAsync(tab, page);
             return;
         }
 
         if (!page.TryBeginLoading())
         {
+            await EnsurePageTextAsync(tab, page);
             return;
         }
 
@@ -2552,6 +2626,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
             _pageCache.Set(cacheKey, rendered);
             page.SetImage(CreateBitmap(rendered));
+            await EnsurePageTextAsync(tab, page, cancellation.Token);
             StatusText.Text = $"第 {page.PageIndex + 1} 页已渲染 · 缓存 {_pageCache.CurrentBytes / 1024d / 1024d:F1} MB";
         }
         catch (OperationCanceledException)
@@ -2574,6 +2649,42 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             }
 
             cancellation.Dispose();
+        }
+    }
+
+    private async Task EnsurePageTextAsync(
+        ReaderTabSession tab,
+        PdfPageViewModel page,
+        CancellationToken cancellationToken = default)
+    {
+        if (!page.TryBeginTextLoading())
+        {
+            return;
+        }
+
+        try
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(tab.Lifetime.Token, cancellationToken);
+            var pageText = await Task.Run(
+                async () => await tab.Document.ExtractPageTextAsync(page.PageIndex, linked.Token),
+                linked.Token);
+            linked.Token.ThrowIfCancellationRequested();
+            if (!tab.IsClosing)
+            {
+                page.SetPageText(pageText);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            page.CancelTextLoading();
+        }
+        catch (Exception exception) when (exception is PdfiumException or InvalidOperationException)
+        {
+            page.CancelTextLoading();
+            if (ReferenceEquals(ActiveTab, tab))
+            {
+                StatusText.Text = $"第 {page.PageIndex + 1} 页文字层载入失败：{exception.Message}";
+            }
         }
     }
 
@@ -2653,6 +2764,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         CancelPageLoad(tab, page.PageIndex);
         page.CancelLoading();
+        page.CancelTextLoading();
         page.ReleaseImage();
     }
 
@@ -2694,6 +2806,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         PagesList.ScrollIntoView(tab.Pages[pageIndex]);
         tab.LastKnownPageIndex = pageIndex;
+        UpdateReadingAssistantContext(tab);
         StatusText.Text = $"跳转到第 {pageIndex + 1} 页";
     }
 
@@ -2704,10 +2817,31 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
+        var previousPageIndex = tab.LastKnownPageIndex;
         tab.LastKnownPageIndex = FindFirstVisiblePageIndex(tab) ?? tab.LastKnownPageIndex;
         tab.LastKnownScrollOffset = Math.Max(0, e.VerticalOffset);
+        if (tab.LastKnownPageIndex != previousPageIndex)
+        {
+            UpdateReadingAssistantContext(tab);
+        }
         _readingPositionTimer.Stop();
         _readingPositionTimer.Start();
+    }
+
+    private void PagesList_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        if (FindVisualChild<ScrollViewer>(PagesList) is not { } scrollViewer)
+        {
+            return;
+        }
+
+        var movement = PdfScrollWheel.GetPixelMovement(e.Delta, scrollViewer.ViewportHeight);
+        var target = Math.Clamp(
+            scrollViewer.VerticalOffset + movement,
+            0,
+            Math.Max(0, scrollViewer.ScrollableHeight));
+        scrollViewer.ScrollToVerticalOffset(target);
+        e.Handled = true;
     }
 
     private async void ReadingPositionTimer_Tick(object? sender, EventArgs e)
@@ -2892,18 +3026,26 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             StatusText.Text = $"文献库已就绪 · {LibraryDocuments.Count} 篇";
             TranslationSourceTextBox.Clear();
             TranslationOutputTextBox.Clear();
-            TranslationPageLabel.Text = "尚未载入页面文本";
+            SelectedSourcePreview.Text = "请在 PDF 页面中选择要翻译的文字…";
+            TranslationPageLabel.Text = "尚未选择原文";
             TranslationStateText.Text = _translationCoordinator is null
                 ? _translationUnavailableMessage ?? "尚未配置 API Key；请打开设置。"
-                : "请选择文字或翻译当前页";
+                : "请在 PDF 原文上拖选要翻译的文字";
             CancelTranslationButton.IsEnabled = false;
             RetryTranslationButton.IsEnabled = false;
             LearnTermButton.IsEnabled = false;
             CancelFullTranslationButton.IsEnabled = false;
             ReadingOutputTextBox.Clear();
             ReadingQuestionTextBox.Clear();
+            ReadingSelectionLabel.Text = "当前 PDF 原文选区 · 未选择";
+            ReadingSelectionPreview.Text = "请回到主窗口，在 PDF 原文上拖选要解释的文字。";
+            ReadingSectionScopeText.Text = "章节范围：跟随主窗口当前阅读页；正在等待文献。";
             ReadingStatusText.Text = _translationUnavailableMessage ?? "可解释选区、总结或就当前文献提问";
             ReadingCancelButton.IsEnabled = false;
+            ExplainPdfSelectionButton.IsEnabled = false;
+            TranslateExplainPdfSelectionButton.IsEnabled = false;
+            SummarizeCurrentSectionButton.IsEnabled = false;
+            SummarizeWholeDocumentButton.IsEnabled = false;
             AskReadingQuestionButton.IsEnabled = false;
             AnnotationList.ItemsSource = null;
             NavigateAnnotationButton.IsEnabled = false;

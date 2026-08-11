@@ -10,11 +10,11 @@
         WindowStartupLocation="CenterScreen">
     <Grid Background="#F5F3EE">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280" />
+            <ColumnDefinition x:Name="LibrarySidebarColumn" Width="280" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Border Background="#173247">
+        <Border x:Name="LibrarySidebar" Background="#173247">
             <Grid Margin="20">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -148,7 +148,12 @@
             </Grid.RowDefinitions>
 
             <Border Background="#E5E9EB" BorderBrush="#C7CDD1" BorderThickness="0,0,0,1">
-                <ListBox x:Name="ReaderTabsList"
+                <Grid>
+                <Button x:Name="LibrarySidebarToggleButton"
+                        Width="34" Height="30" Margin="5,5,0,5" Padding="0"
+                        HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Click="LibrarySidebarToggleButton_Click" Content="☰" ToolTip="收起或展开文献栏" />
+                <ListBox x:Name="ReaderTabsList" Margin="42,0,0,0"
                          ItemsSource="{Binding OpenTabs}"
                          SelectionChanged="ReaderTabsList_SelectionChanged"
                          Background="Transparent"
@@ -192,6 +197,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+                </Grid>
             </Border>
 
             <Grid Grid.Row="1">
@@ -206,7 +212,7 @@
 
                 <Grid x:Name="DocumentReader" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="215" />
+                        <ColumnDefinition x:Name="ReaderNavigationColumn" Width="215" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="340" />
                     </Grid.ColumnDefinitions>
@@ -320,10 +326,11 @@
                             <Grid.RowDefinitions><RowDefinition Height="30" /><RowDefinition Height="30" /></Grid.RowDefinitions>
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                    <Button Width="34" Margin="0,0,8,0" Click="ReaderNavigationToggleButton_Click" Content="☰" ToolTip="收起或展开目录栏" />
                                     <Button Width="58" Margin="0,0,5,0" Click="ShowPdfViewButton_Click" Content="PDF" />
                                     <Button Width="82" Margin="0,0,5,0" Click="ShowParagraphViewButton_Click" Content="段落双语" />
                                     <Button Width="82" Margin="0,0,5,0" Click="ShowComparisonViewButton_Click" Content="左右对照" />
-                                    <Button Width="65" Margin="0,0,5,0" Click="ShowTranslationPopupButton_Click" Content="浮窗" />
+                                    <Button Width="84" Margin="0,0,5,0" Click="ShowReadingAssistantButton_Click" Content="AI 助读 ↗" />
                                     <Button Width="74" Margin="8,0,5,0" Click="TranslateBilingualPageButton_Click" Content="翻译本页" />
                                     <Button Width="74" Margin="0,0,5,0" Click="TranslateFullDocumentButton_Click" Content="全文翻译" />
                                     <Button x:Name="CancelFullTranslationButton" Width="74" Click="CancelFullTranslationButton_Click" Content="取消全文" IsEnabled="False" />
@@ -337,7 +344,7 @@
                                     <Button Width="64" Margin="0,0,5,0" Click="CreateNoteButton_Click" Content="批注" />
                                     <Button Width="64" Click="ToggleBookmarkButton_Click" Content="书签" />
                                 </StackPanel>
-                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="11" Foreground="#64737C" Text="先在右侧原文框选择文字；锚点保存为 PDF 坐标" />
+                                <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" FontSize="11" Foreground="#64737C" Text="在 PDF 原文上直接拖选：松开鼠标后自动翻译；锚点保存为 PDF 坐标" />
                             </DockPanel>
                         </Grid>
                     </Border>
@@ -349,16 +356,19 @@
                          BorderThickness="0"
                          ItemsSource="{Binding ActiveTab.Pages}"
                          ScrollViewer.ScrollChanged="PagesList_ScrollChanged"
+                         PreviewMouseWheel="PagesList_PreviewMouseWheel"
                          ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.IsDeferredScrollingEnabled="False"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
                          VirtualizingPanel.IsVirtualizing="True"
                          VirtualizingPanel.VirtualizationMode="Recycling"
+                         VirtualizingPanel.ScrollUnit="Pixel"
                          VirtualizingPanel.CacheLength="1,2"
                          VirtualizingPanel.CacheLengthUnit="Page">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <VirtualizingStackPanel VirtualizationMode="Recycling" ScrollUnit="Pixel" />
+                            <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling" ScrollUnit="Pixel" />
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                     <ListBox.ItemContainerStyle>
@@ -378,13 +388,21 @@
                                 <Border MinHeight="620" Padding="1" HorizontalAlignment="Center" Background="White" BorderBrush="#B5BCC1" BorderThickness="1">
                                     <Grid>
                                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#72808A" Text="{Binding Status}" />
-                                        <Image x:Name="PageImage" MaxWidth="920" Stretch="Uniform" Source="{Binding Image}" />
+                                        <Image x:Name="PageImage" MaxWidth="1040" Stretch="Uniform" Source="{Binding Image}"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
                                         <local:AnnotationOverlay Width="{Binding ElementName=PageImage, Path=ActualWidth}"
                                                                  Height="{Binding ElementName=PageImage, Path=ActualHeight}"
                                                                  HorizontalAlignment="Center"
                                                                  VerticalAlignment="Center"
                                                                  IsHitTestVisible="False"
                                                                  ItemsSource="{Binding AnnotationOverlays}" />
+                                        <local:PdfTextSelectionLayer Width="{Binding ElementName=PageImage, Path=ActualWidth}"
+                                                                     Height="{Binding ElementName=PageImage, Path=ActualHeight}"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"
+                                                                     Cursor="IBeam"
+                                                                     PageText="{Binding PageText}"
+                                                                     SelectionCompleted="PdfTextSelectionLayer_SelectionCompleted" />
                                     </Grid>
                                 </Border>
                             </StackPanel>
@@ -497,51 +515,48 @@
                     </Border>
 
                     <Border Grid.Column="2" Background="#FAFAF8" BorderBrush="#C9CFD3" BorderThickness="1,0,0,0">
-                        <TabControl Background="Transparent" BorderThickness="0">
-                            <TabItem Header="翻译">
+                        <Grid>
+                            <Grid>
                                 <Grid Margin="14">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="2*" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="0" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="2*" />
+                                <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <DockPanel>
                                 <TextBlock VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" Foreground="#173247" Text="英译中" />
-                                <Button DockPanel.Dock="Right" Padding="9,4" Click="TranslationSettingsButton_Click" Content="设置" />
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Margin="0,0,6,0" Padding="9,4" Click="ShowReadingAssistantButton_Click" Content="AI 助读 ↗" />
+                                    <Button Padding="9,4" Click="TranslationSettingsButton_Click" Content="设置" />
+                                </StackPanel>
                             </DockPanel>
                             <TextBlock Grid.Row="1" Margin="0,7,0,10" FontSize="11" Foreground="#65737C" TextWrapping="Wrap"
-                                       Text="仅在触发翻译时向所选服务商发送必要文本。" />
+                                       Text="在左侧 PDF 原文上拖选任意文字，松开鼠标后自动翻译。仅发送所选文本。" />
                             <DockPanel Grid.Row="2" Margin="0,0,0,6">
-                                <TextBlock x:Name="TranslationPageLabel" VerticalAlignment="Center" Foreground="#40515D" Text="尚未载入页面文本" />
-                                <Button DockPanel.Dock="Right" Padding="7,3" Click="LoadCurrentPageTextButton_Click" Content="载入当前页" />
+                                <TextBlock x:Name="TranslationPageLabel" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#40515D" Text="尚未选择原文" />
                             </DockPanel>
+                            <Border Grid.Row="3" MinHeight="58" MaxHeight="112" Margin="0,0,0,8" Padding="10,8"
+                                    Background="#F0F5F7" BorderBrush="#D4E0E5" BorderThickness="1" CornerRadius="5">
+                                <TextBlock x:Name="SelectedSourcePreview" Foreground="#324A58" TextWrapping="Wrap"
+                                           TextTrimming="CharacterEllipsis" Text="请在 PDF 页面中选择要翻译的文字…" />
+                            </Border>
                             <TextBox x:Name="TranslationSourceTextBox"
-                                     Grid.Row="3"
-                                     Padding="8"
-                                     AcceptsReturn="True"
-                                     TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"
+                                     Grid.Row="4"
+                                     Visibility="Collapsed"
                                      SelectionChanged="TranslationSourceTextBox_SelectionChanged"
-                                     ToolTip="在这里选择单词、句子或段落，也可以直接编辑待译文字。" />
-                            <UniformGrid Grid.Row="4" Margin="0,9,0,0" Columns="5">
-                                <Button Margin="0,0,4,0" Padding="3,5" Tag="Word" Click="TranslateButton_Click" Content="单词" />
-                                <Button Margin="0,0,4,0" Padding="3,5" Tag="Selection" Click="TranslateButton_Click" Content="选区" />
-                                <Button Margin="0,0,4,0" Padding="3,5" Tag="Sentence" Click="TranslateButton_Click" Content="句子" />
-                                <Button Margin="0,0,4,0" Padding="3,5" Tag="Paragraph" Click="TranslateButton_Click" Content="段落" />
-                                <Button Padding="3,5" Tag="Page" Click="TranslateButton_Click" Content="当前页" />
-                            </UniformGrid>
+                                     IsTabStop="False" />
                             <TextBlock x:Name="TranslationStateText"
                                        Grid.Row="5"
                                        Margin="0,8,0,6"
                                        Foreground="#53636E"
                                        TextWrapping="Wrap"
-                                       Text="请选择文字或翻译当前页" />
+                                       Text="请在 PDF 原文上拖选要翻译的文字" />
                             <TextBox x:Name="TranslationOutputTextBox"
                                      Grid.Row="6"
                                      Padding="8"
@@ -555,10 +570,12 @@
                                 <Button x:Name="RetryTranslationButton" Width="72" Click="RetryTranslationButton_Click" Content="重试" IsEnabled="False" />
                             </StackPanel>
                                 </Grid>
-                            </TabItem>
-                            <TabItem Header="AI 助读">
-                                <Grid Margin="12">
+                            </Grid>
+                            <ContentControl x:Name="ReadingAssistantHost" Visibility="Collapsed">
+                                <Grid x:Name="ReadingAssistantPanel" Margin="18">
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
@@ -567,19 +584,36 @@
                                     </Grid.RowDefinitions>
                                     <TextBlock FontSize="18" FontWeight="SemiBold" Foreground="#173247" Text="AI 阅读辅助" />
                                     <TextBlock Grid.Row="1" Margin="0,7,0,9" FontSize="11" Foreground="#65737C" TextWrapping="Wrap"
-                                               Text="仅在明确操作时发送必要文本；问答页码和英文证据由本地反查。" />
-                                    <UniformGrid Grid.Row="2" Columns="2" Rows="2">
-                                        <Button Margin="0,0,4,4" Padding="4,6" Click="ExplainSelectionButton_Click" Content="解释选区" />
-                                        <Button Margin="4,0,0,4" Padding="4,6" Click="TranslateExplainSelectionButton_Click" Content="翻译并解释" />
-                                        <Button Margin="0,4,4,0" Padding="4,6" Click="SummarizeSectionButton_Click" Content="总结当前章节" />
-                                        <Button Margin="4,4,0,0" Padding="4,6" Click="SummarizeDocumentButton_Click" Content="总结整篇论文" />
+                                               Text="选区来自主窗口 PDF 原文；章节范围跟随主窗口当前阅读页，并由 PDF 目录确定。" />
+                                    <Border Grid.Row="2" Margin="0,0,0,8" Padding="10,8" Background="#F0F5F7"
+                                            BorderBrush="#D4E0E5" BorderThickness="1" CornerRadius="5">
+                                        <StackPanel>
+                                            <TextBlock x:Name="ReadingSelectionLabel" FontSize="11" FontWeight="SemiBold" Foreground="#315B78" Text="当前 PDF 原文选区 · 未选择" />
+                                            <TextBlock x:Name="ReadingSelectionPreview" MaxHeight="62" Margin="0,5,0,0" Foreground="#40515D"
+                                                       TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Text="请回到主窗口，在 PDF 原文上拖选要解释的文字。" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Row="3" Margin="0,0,0,8" Padding="10,8" Background="#FFF9E9"
+                                            BorderBrush="#E1D4A8" BorderThickness="1" CornerRadius="5">
+                                        <TextBlock x:Name="ReadingSectionScopeText" Foreground="#6E5B2D" TextWrapping="Wrap"
+                                                   Text="章节范围：跟随主窗口当前阅读页；正在等待文献。" />
+                                    </Border>
+                                    <UniformGrid Grid.Row="4" Columns="2" Rows="2">
+                                        <Button x:Name="ExplainPdfSelectionButton" Margin="0,0,4,4" Padding="4,7" Click="ExplainSelectionButton_Click"
+                                                Content="解释 PDF 选区" IsEnabled="False" ToolTip="解释上方显示的 PDF 原文选区" />
+                                        <Button x:Name="TranslateExplainPdfSelectionButton" Margin="4,0,0,4" Padding="4,7" Click="TranslateExplainSelectionButton_Click"
+                                                Content="翻译并解释 PDF 选区" IsEnabled="False" ToolTip="翻译并解释上方显示的 PDF 原文选区" />
+                                        <Button x:Name="SummarizeCurrentSectionButton" Margin="0,4,4,0" Padding="4,7" Click="SummarizeSectionButton_Click"
+                                                Content="总结当前页所属章节" IsEnabled="False" ToolTip="范围显示在上方黄色提示框中" />
+                                        <Button x:Name="SummarizeWholeDocumentButton" Margin="4,4,0,0" Padding="4,7" Click="SummarizeDocumentButton_Click"
+                                                Content="总结整篇论文" IsEnabled="False" />
                                     </UniformGrid>
-                                    <DockPanel Grid.Row="3" Margin="0,9,0,7">
+                                    <DockPanel Grid.Row="5" Margin="0,9,0,7">
                                         <Button x:Name="ReadingCancelButton" DockPanel.Dock="Right" Width="62" Click="CancelReadingButton_Click" Content="取消" IsEnabled="False" />
                                         <TextBlock x:Name="ReadingStatusText" Margin="0,0,7,0" VerticalAlignment="Center" Foreground="#53636E" TextWrapping="Wrap"
                                                    Text="可解释选区、总结或就当前文献提问" />
                                     </DockPanel>
-                                    <TabControl Grid.Row="4">
+                                    <TabControl Grid.Row="6">
                                         <TabItem Header="结果">
                                             <TextBox x:Name="ReadingOutputTextBox" Padding="8" AcceptsReturn="True" IsReadOnly="True"
                                                      TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
@@ -639,24 +673,11 @@
                                         </TabItem>
                                     </TabControl>
                                 </Grid>
-                            </TabItem>
-                        </TabControl>
+                            </ContentControl>
+                        </Grid>
                     </Border>
                 </Grid>
 
-                <Popup x:Name="TranslationPopup"
-                       Placement="MousePoint"
-                       StaysOpen="False"
-                       AllowsTransparency="True">
-                    <Border Width="420" MaxHeight="320" Padding="14" Background="#FFFDF5" BorderBrush="#8A7951" BorderThickness="1" CornerRadius="5">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="#806B3D" Text="翻译浮窗" />
-                                <TextBlock x:Name="TranslationPopupText" Margin="0,8,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Border>
-                </Popup>
             </Grid>
 
             <Border Grid.Row="2" Background="#EEF0F1" BorderBrush="#CDD2D5" BorderThickness="0,1,0,0">

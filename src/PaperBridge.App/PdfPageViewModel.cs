@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
+using PaperBridge.Application.Abstractions;
 
 namespace PaperBridge.App;
 
@@ -10,6 +11,8 @@ public sealed class PdfPageViewModel : INotifyPropertyChanged
     private ImageSource? _image;
     private string _status = "等待渲染";
     private bool _isLoading;
+    private bool _isTextLoading;
+    private PdfPageText? _pageText;
 
     public PdfPageViewModel(Guid tabId, int pageIndex)
     {
@@ -32,6 +35,31 @@ public sealed class PdfPageViewModel : INotifyPropertyChanged
         get => _image;
         private set => SetField(ref _image, value);
     }
+
+    public PdfPageText? PageText
+    {
+        get => _pageText;
+        private set => SetField(ref _pageText, value);
+    }
+
+    public bool TryBeginTextLoading()
+    {
+        if (_isTextLoading || PageText is not null)
+        {
+            return false;
+        }
+
+        _isTextLoading = true;
+        return true;
+    }
+
+    public void SetPageText(PdfPageText pageText)
+    {
+        PageText = pageText;
+        _isTextLoading = false;
+    }
+
+    public void CancelTextLoading() => _isTextLoading = false;
 
     public string Status
     {

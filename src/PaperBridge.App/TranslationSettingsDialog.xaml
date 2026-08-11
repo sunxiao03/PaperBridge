@@ -2,10 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="翻译服务设置"
-        Width="560"
-        Height="560"
-        MinWidth="520"
-        MinHeight="520"
+        Width="660"
+        Height="720"
+        MinWidth="600"
+        MinHeight="650"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
     <Grid Margin="24">
@@ -75,16 +75,33 @@
         <Grid Grid.Row="7" Margin="0,14,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <TextBlock Text="高级：自定义 AI 指令" />
+            <DockPanel>
+                <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Text="高级：自定义 AI 指令" />
+                <Button x:Name="UseInstructionExampleButton" DockPanel.Dock="Right" Padding="8,3" Click="UseInstructionExampleButton_Click" Content="插入示例" />
+            </DockPanel>
+            <Border Grid.Row="1" Margin="0,7,0,8" Padding="10,8" Background="#F0F5F7"
+                    BorderBrush="#D4E0E5" BorderThickness="1" CornerRadius="5">
+                <TextBlock x:Name="CustomInstructionGuideText" Foreground="#40515D" TextWrapping="Wrap">
+                    <Run FontWeight="SemiBold" Text="用途：" />
+                    <Run Text="补充你长期希望保持的翻译与助读风格；它会同时作用于划词翻译、双语翻译、选区解释和总结。&#10;" />
+                    <Run FontWeight="SemiBold" Text="推荐写法：" />
+                    <Run Text="说明术语偏好、语言风格、公式/缩写处理和输出结构。写成简短、稳定、无冲突的规则。&#10;" />
+                    <Run FontWeight="SemiBold" Text="示例：" />
+                    <Run Text="“采用正式简洁的核工程学术中文；保留公式、变量、单位和文献编号；首次出现的缩写给出英文全称；解释时先给结论，再说明依据。”&#10;" />
+                    <Run FontWeight="SemiBold" Foreground="#9A4E32" Text="隐私：" />
+                    <Run Text="这里的内容会随相关 AI 请求发送给所选服务商。不要填写 API Key、密码、未公开数据或个人敏感信息。" />
+                </TextBlock>
+            </Border>
             <TextBox x:Name="CustomInstructionTextBox"
-                     Grid.Row="1"
-                     Margin="0,6,0,0"
+                     Grid.Row="2"
                      Padding="8"
                      MaxLength="8000"
                      AcceptsReturn="True"
                      TextWrapping="Wrap"
+                     ToolTip="留空表示不添加额外指令；最多 8,000 个字符"
                      VerticalScrollBarVisibility="Auto" />
         </Grid>
 

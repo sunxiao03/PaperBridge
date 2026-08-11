@@ -7,6 +7,8 @@ namespace PaperBridge.App;
 
 public partial class TranslationSettingsDialog : Window
 {
+    private const string InstructionExample =
+        "采用正式、简洁的核工程学术中文。保留公式、变量、单位和文献编号；首次出现的缩写给出英文全称；解释时先给结论，再说明依据。";
     private bool _loading;
 
     public TranslationSettingsDialog(TranslationServiceSettings settings, bool hasStoredKey)
@@ -69,6 +71,22 @@ public partial class TranslationSettingsDialog : Window
         DeleteKeyForProviderId = SelectedProviderId;
         ApiKeyPasswordBox.Clear();
         KeyStatusText.Text = "保存设置后删除该服务商的已存密钥。";
+    }
+
+    private void UseInstructionExampleButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(CustomInstructionTextBox.Text) ||
+            MessageBox.Show(
+                this,
+                "用推荐示例替换当前自定义 AI 指令？",
+                "插入示例",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) == MessageBoxResult.Yes)
+        {
+            CustomInstructionTextBox.Text = InstructionExample;
+            CustomInstructionTextBox.CaretIndex = CustomInstructionTextBox.Text.Length;
+            CustomInstructionTextBox.Focus();
+        }
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)

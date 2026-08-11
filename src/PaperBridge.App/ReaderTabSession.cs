@@ -81,7 +81,7 @@ public sealed class ReaderTabSession : IDisposable
 
     internal string TranslationMachineOutputText { get; set; } = string.Empty;
 
-    internal string TranslationStatus { get; set; } = "请选择文字或翻译当前页";
+    internal string TranslationStatus { get; set; } = "请在 PDF 原文上拖选要翻译的文字";
 
     internal TranslationGranularity LastTranslationGranularity { get; set; } = TranslationGranularity.Selection;
 

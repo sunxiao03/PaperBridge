@@ -6,7 +6,7 @@ Only the latest published PaperBridge release candidate is supported. Version 0.
 
 ## Reporting a vulnerability
 
-Until a public repository contact is established, report security issues privately to the person who supplied the build. Do not include API keys, private PDFs, database files, or exploit payloads containing third-party confidential data in a public report.
+Use the repository's **Security** tab to submit a private vulnerability report when that option is available. If it is unavailable, open a minimal public issue requesting a private contact channel, but do not include vulnerability details. Do not include API keys, private PDFs, database files, or exploit payloads containing third-party confidential data in a public report.
 
 Include the PaperBridge version, Windows version, reproduction steps, and the smallest synthetic test file that demonstrates the issue. Acknowledgement and remediation timelines are best effort; this project has no commercial support commitment.
 

@@ -250,14 +250,24 @@ public sealed class TranslationCoordinator : IDisposable
             {
                 if (Interlocked.Decrement(ref _waiterCount) == 0 && !Task.IsCompleted)
                 {
-                    _cancellation.Cancel();
+                    Cancel();
                 }
 
                 TryDispose();
             }
         }
 
-        public void Cancel() => _cancellation.Cancel();
+        public void Cancel()
+        {
+            try
+            {
+                _cancellation.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Completion and coordinator disposal may race after the final waiter leaves.
+            }
+        }
 
         public void MarkCompleted()
         {

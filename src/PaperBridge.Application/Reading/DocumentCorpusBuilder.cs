@@ -117,6 +117,25 @@ public static class DocumentCorpusBuilder
         return new DocumentCorpus(document.PageCount, sections, chunks, totalCharacters);
     }
 
+    public static DocumentSection ResolveSection(
+        int pageCount,
+        IReadOnlyList<PdfOutlineItem> outline,
+        int pageIndex)
+    {
+        ArgumentNullException.ThrowIfNull(outline);
+        if (pageCount < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageCount));
+        }
+
+        if ((uint)pageIndex >= (uint)pageCount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageIndex));
+        }
+
+        return BuildSections(pageCount, outline).Last(section => section.StartPageIndex <= pageIndex);
+    }
+
     private static IReadOnlyList<DocumentSection> BuildSections(
         int pageCount,
         IReadOnlyList<PdfOutlineItem> outline)

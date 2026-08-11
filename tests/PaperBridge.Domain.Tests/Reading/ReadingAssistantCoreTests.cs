@@ -5,6 +5,25 @@ namespace PaperBridge.Domain.Tests.Reading;
 
 public sealed class ReadingAssistantCoreTests
 {
+    [Theory]
+    [InlineData(-120, 72)]
+    [InlineData(120, -72)]
+    [InlineData(-12000, 72)]
+    [InlineData(12000, -72)]
+    public void PdfWheelMovementIsPixelBasedAndCapsExtremeDeviceDeltas(int delta, double expected)
+    {
+        Assert.Equal(expected, PdfScrollWheel.GetPixelMovement(delta, 800), precision: 3);
+    }
+
+    [Fact]
+    public void PdfWheelMovementPreservesSmallPrecisionTrackpadDeltas()
+    {
+        var movement = PdfScrollWheel.GetPixelMovement(-12, 800);
+
+        Assert.InRange(movement, 7.19, 7.21);
+        Assert.True(movement < PdfScrollWheel.MaximumStepPixels);
+    }
+
     [Fact]
     public void CorpusUsesOutlineSectionsAndBoundedPageChunks()
     {
@@ -37,6 +56,33 @@ public sealed class ReadingAssistantCoreTests
         var section = Assert.Single(corpus.Sections);
         Assert.Contains("PDF 无目录", section.Title, StringComparison.Ordinal);
         Assert.Equal(section.Title, Assert.Single(corpus.Chunks).SectionTitle);
+    }
+
+    [Fact]
+    public void CurrentSectionFollowsReadingPageAndReportsItsExactRange()
+    {
+        var outline = new[]
+        {
+            new PdfOutlineItem("Introduction", 0, []),
+            new PdfOutlineItem("Methods", 2, []),
+            new PdfOutlineItem("Results", 5, [])
+        };
+
+        var section = DocumentCorpusBuilder.ResolveSection(8, outline, 3);
+
+        Assert.Equal("Methods", section.Title);
+        Assert.Equal(2, section.StartPageIndex);
+        Assert.Equal(5, section.EndPageIndexExclusive);
+    }
+
+    [Fact]
+    public void CurrentSectionWithoutOutlineExplicitlyFallsBackToCurrentPage()
+    {
+        var section = DocumentCorpusBuilder.ResolveSection(8, [], 3);
+
+        Assert.Equal("第 4 页（PDF 无目录）", section.Title);
+        Assert.Equal(3, section.StartPageIndex);
+        Assert.Equal(4, section.EndPageIndexExclusive);
     }
 
     [Fact]
